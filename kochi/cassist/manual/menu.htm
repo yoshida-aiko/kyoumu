@@ -1,0 +1,285 @@
+<html>
+
+<head>
+<title>教務事務システム：Campus Assist</title>
+<link rel=stylesheet href="../common/style.css" type=text/css>
+</head>
+
+<body marginheight=0 marginwidth=0 bgcolor="#ffffff" topmargin="0" leftmargin="0" bottommargin="0" rightmargin="0">
+<div align="center">
+
+<form action="login/default.asp" name="frm">
+
+<table width=170 cellspacing="0" cellpadding="0" border="0">
+	<tr>
+		<td align="center"><img src="../image/sp.gif" height="5"></td>
+	</tr>
+	<tr>
+		<td align="left">
+
+			<table width=160 cellspacing="0" cellpadding="0" border="0">
+<!--
+				<tr>
+					<td class=menu><b>1・システム概要</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="1.htm" target="main">システム概要</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>2・システム基本操作</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2.htm#f1" target="main">キーボード操作</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2.htm#f2" target="main">マウス操作</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2.htm#f3" target="main">画面操作</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+-->
+				<tr>
+					<td class=menu align="center"><img src="img/minititle.gif"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="20"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>1・ログイン</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="login.htm" target="main">ログイン</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>2・メインメニュー</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="0-1.htm" target="main">異動状況一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="0-2.htm" target="main">学生数一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>3・出欠入力</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="1-1.htm" target="main">授業出欠入力</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="1-2.htm" target="main">行事出欠入力</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="1-3.htm" target="main">日毎出欠入力</a></td>
+				</tr>
+				<tr>
+					<td class=menu><b>4・試験・成績</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-1.htm" target="main">試験実施科目登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-2.htm" target="main">試験監督免除申請登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-3.htm" target="main">成績登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-tuika1.htm" target="main">実力試験成績登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-tuika2.htm" target="main">成績毎所見登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-tuika3.htm" target="main">欠席日数登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-4.htm" target="main">試験時間割（クラス別）</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-5.htm" target="main">試験期間教官予定一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-6.htm" target="main">成績一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-7.htm" target="main">個人別成績一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="2-8.htm" target="main">留年該当者一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>5・スケジュール</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="3-1.htm" target="main">行事日程一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="3-2.htm" target="main">クラス別授業時間一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="3-3.htm" target="main">教官別授業時間一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="3-4.htm" target="main">時間割交換連絡</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>6・その他入力</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-1.htm" target="main">進路先情報登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-2.htm" target="main">使用教科書登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-3.htm" target="main">指導要録所見等登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-4.htm" target="main">調査書所見等登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-5.htm" target="main">各種委員登録</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-6.htm" target="main">個人履修選択科目決定</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="4-7.htm" target="main">部活動部員一覧</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>7・情報検索</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="5-1.htm" target="main">学生情報検索</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="5-2.htm" target="main">中学校情報検索</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="5-3.htm" target="main">高等学校情報検索</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="5-4.htm" target="main">進路先情報検索</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="5-5.htm" target="main">空き時間情報検索</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><b>8・支援機能</b></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="6-1.htm" target="main">特別教室予約</a></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" height="3"></td>
+				</tr>
+				<tr>
+					<td class=menu><img src="../image/sp.gif" width="5" height="1"><a href="6-2.htm" target="main">連絡掲示板</a></td>
+				</tr>
+			</table>
+
+		</td>
+	</tr>
+</table>
+
+</form>
+</body>
+
+</html>

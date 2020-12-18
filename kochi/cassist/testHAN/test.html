@@ -1,0 +1,62 @@
+<HTML>
+<HEAD>
+
+<SCRIPT ID=clientEventHandlersJS LANGUAGE=javascript>
+<!--
+	function f_Print() {
+
+		document.frm.submit();
+
+	}
+
+//-->
+</SCRIPT>
+
+</HEAD>
+
+<BODY>
+<FORM name="frm" ACTION="HAN0240.asp"  METHOD="post">
+
+<TABLE>
+<TR>
+<TD>User</TD>
+<TD><INPUT TYPE="text" name = "DBUser" value="kurume"></TD>
+<TD>Password</TD>
+<TD><INPUT TYPE="text" name = "DBPass" value="cassist"></TD>
+<TD>Connection</TD>
+<TD><INPUT TYPE="text" name = "DBConnection" value="kyomu"></TD>
+</TR>
+</TABLE>
+
+<BR>
+
+<TABLE>
+<TR>
+<TD>PDFPath</TD>
+<TD><INPUT TYPE="text" size="100" name = "PDFPath"  value="T:\WebRoot\catest\pdf\"></TD>
+</TR>
+</TABLE>
+
+<BR>
+
+<TABLE>
+<TR>
+<TD>年度</TD>
+<TD><INPUT TYPE="text" name = "txtNendo"></TD>
+<TD>試験</TD>
+<TD><INPUT TYPE="text" name = "txtSiken"></TD>
+<TD>学年</TD>
+<TD><INPUT TYPE="text" name = "txtGakunen"></TD>
+<TD>クラス</TD>
+<TD><INPUT TYPE="text" name = "txtClass"></TD>
+</TR>
+</TABLE>
+
+<input class="COMMAND" type="button" value="印刷" onClick = "f_Print()"> 
+<!-- <input class="COMMAND" type="submit" value="印刷" > -->
+
+</FORM>
+</BODY>
+</HTML>
+
+
