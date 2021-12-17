@@ -1,0 +1,100 @@
+vti_encoding:SR|utf8-nl
+javascript\:fj_casemenu('syuketu');:login/menu.asp
+mst/mst0133/top.asp<%=m_sarg_top%>:mst/mst0133/default.asp
+gak/gak0461/:login/menu.asp
+javascript\:f_touroku();:web/web0320/web032_top.asp web/web032033/web032_top.asp web/web0321/web0321_top.asp web/web0320_old/web0320_top.asp web/web0320/web0320_top.asp web/web0320/web032_top1.asp
+web/web0320/bar.css:web/web0320/kakunin.asp
+jik/jik0210/:login/menu2.asp login/menu.asp
+javascript\:fj_casemenu('others');:login/menu.asp
+web/web0390/:login/menu.asp
+kks/kks0140/:login/menu2.asp login/menu.asp
+web/common/style.css:web/web0321/delete.asp web/web032033/delete.asp web/web0320_old/delete.asp web/web0320/delete.asp
+web/web0350/:login/menu.asp
+mst/mst0133/:login/menu2.asp login/menu.asp
+mst/common/style.css:mst/mst0144/delete.asp
+http\://www.infogram.co.jp/:login/foot.asp
+web/web0310/:login/menu2.asp login/menu.asp
+javascript\:fj_casemenu('sche');:login/menu.asp
+web/web0321/web0321_main.asp<%=sarg%>:web/web0321/default.asp
+mst/mst0113/:login/menu2.asp login/menu.asp
+javascript\:f_gosyosai('<%=m_rs("m31_gakko_cd") %>'):mst/mst0123/main.asp
+web/web0330/:login/menu2.asp login/menu.asp
+web/web0320_old/bar.css:web/web0320_old/kakunin.asp
+skn/skn0180/:login/menu2.asp login/menu.asp
+javascript\:f_touroku():web/web0310/web0310_top.asp web/web0330/web0330_top.asp mst/mst0144/top.asp
+web/web0321/bar.css:web/web0321/kakunin.asp
+login/images/menu_logo.gif:login/menu2.asp
+image/catitle.ico:ｺﾋﾟｰ\\ (2)\\ ～\\ default.asp default.asp ｺﾋﾟｰ\\ ～\\ default.asp
+sei/sei0300/sei0300_top.asp<%=sarg%>:sei/sei0300/default.asp
+skn/skn0120/:login/menu2.asp login/menu.asp
+gak/gak0470/:login/menu2.asp login/menu.asp
+javascript\:f_linkclick(<%=m_rs("t47_no")%>);:web/web0320/web0320_main.asp web/web0320_old/web0320_main.asp web/web0321/web0321_main.asp web/web032033/web0320_main.asp
+common/com_select/sel_user/bar.html:common/com_select/sel_user/default.asp
+<%if m_smode = "" then%>    default2.asp<%else%>    main.asp<%= m_sarg %><%end if%>:mst/mst0123/default.asp
+gak/gak0310/:login/menu.asp
+progid\:oracleinprocserver.xorasession:global.asa
+web/web0320/web0320_top.asp<%=sarg%>:web/web0320/default.asp
+web/web0320_old/web0320_top.asp<%=sarg%>:web/web0320_old/default.asp
+web/web032033/bar.css:web/web032033/kakunin.asp
+javascript\:f_kakunin(<%=m_rs("t46_no")%>):web/web0330/web0330_main.asp
+web/web0330/post:web/web0330/web0330_del.asp web/web0330/sousin_top.asp web/web0330/web0330_main.asp web/web0330/view.asp
+web/web032033/web0320_top.asp<%=sarg%>:web/web032033/default.asp
+kks/kks0130/default.asp:login/ftopmain.asp
+gyo/gyo0200/:login/menu.asp
+login/post:login/view.asp login/j_view.asp login/top_lwr.asp
+javascript\:f_kakunin(<%=m_rs("t52_no")%>):web/web0310/web0310_main.asp
+jik/jik0200/:login/menu2.asp login/menu.asp
+javascript\:f_gosyosai('<%=m_rs("m32_sinro_cd") %>','<%=m_isinrokbn%>'):mst/mst0133/main.asp
+syosai/default.asp:login/main.asp
+sei/sei0200/sei0200_middle.asp<%=w_sitem%>:sei/sei0200/sei0200_main.asp
+web/web0320_old/web0320_main.asp<%=sarg%>:web/web0320_old/default.asp
+kks/kks0170/:login/menu.asp
+common/com_select/sel_jyusyo/bar.html:common/com_select/sel_jyusyo/default.asp
+mst/mst0113/top.asp<%= m_sarg_top %>:mst/mst0113/default.asp
+sei/sei0600/white.htm:sei/sei0600/sei0600_upd.asp
+font.css:web/web0310/web0310_edt.asp web/web0330/web0330_del.asp web/web0390/web0390_upd.asp web/web0330/web0330_edt.asp web/web0340/web0340_upd.asp web/web0310/web0310_del.asp gak/gak0470/gak0470_edt.asp gak/gak0461/gak0461_upd.asp
+<%=c_returl%>default.asp:login/default.asp
+mst/mst0143/:login/menu2.asp
+web/web0340/:login/menu2.asp login/menu.asp
+kks/kks0110/:login/menu2.asp login/menu.asp
+mst/mst0123/:login/menu2.asp login/menu.asp
+<%=c_image_dir%>table_sita.gif:common/cacommon.asp
+web/web0360/:login/menu.asp
+common/com_select/sel_user/post:common/com_select/sel_user/sel_kyokan_top.asp
+web/web0300/:login/menu2.asp login/menu.asp
+javascript\:fj_casemenu('support');:login/menu.asp
+mst/mst0144/:login/menu.asp
+web/web0320/:login/menu2.asp login/menu.asp
+web/web032033/web0320_main.asp<%=sarg%>:web/web032033/default.asp
+/cassist/:login/menu2.asp
+manual/default.asp:login/header.asp
+web/web032033/web0320_top.asp:web/web032033/default.asp
+<% if m_smode = "" then %>    default2.asp<% else %>    main.asp<%= m_sarg %><% end if %>:mst/mst0113/default.asp
+javascript\:f_gosyosai('<%=trim(m_rs("m13_tyugakko_cd")) %>'):mst/mst0113/main.asp
+skn/skn0170/:login/menu2.asp login/menu.asp
+sei/sei0200/sei0200_bottom.asp<%=w_sitem%>:sei/sei0200/sei0200_main.asp
+han/han0121/:login/menu.asp
+<%=c_image_dir%>sp.gif:common/cacommon.asp
+javascript\:fj_casemenu('info');:login/menu.asp
+skn/skn0130/:login/menu2.asp login/menu.asp
+sei/sei0300/:login/menu.asp
+sei/sei0100/:login/menu2.asp login/menu.asp
+javascript\:f_detail('<%= gf_htmltablestr(m_rs("t13_gakusei_no")) %>');:gak/gak0310/main.asp gak/gak0300/main.asp
+sei/sei0600/:login/menu.asp
+sei/sei0500/:login/menu.asp
+sei/sei0400/:login/menu.asp
+<%=w_frameurl%>:mst/mst0133/default.asp login/top.asp
+gak/gak0460/:login/menu2.asp login/menu.asp
+web/web0321/web0321_top.asp<%=sarg%>:web/web0321/default.asp
+gak/gak0300/:login/menu2.asp
+javascript\:fj_casemenu('shiken');:login/menu.asp
+sei/sei0600/white.asp:sei/sei0600/sei0100_bottom.asp
+web/web0320/web0320_main.asp<%=sarg%>:web/web0320/default.asp
+mst/mst0144/bar.css:mst/mst0144/kakunin.asp
+javascript\:jf_returndate('<%= m_cyours("m12_yubin_bango") %>','<%=i%>','<%= m_cyours("m12_renban") %>');:common/com_select/sel_jyusyo/jyusyo_dow.asp
+common/com_select/sel_kyokan/post:common/com_select/sel_kyokan/sel_kyokan_top.asp
+gyo/gyo0150/:login/menu2.asp
+web/web0300/img/sp.gif:web/web0300/web0300_lst.asp web/web0300/web0300_del.asp
+common/com_select/sel_kyokan/bar.html:common/com_select/sel_kyokan/default.asp
+web/web0310/post:web/web0310/sousin_top.asp web/web0310/web0310_del.asp web/web0310/web0310_main.asp web/web0310/view.asp
+mst/mst0123/top.asp<%= m_sarg_top %>:mst/mst0123/default.asp

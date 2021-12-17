@@ -1,0 +1,7 @@
+vti_encoding:SR|utf8-nl
+vti_author:SR|SVR-KYOWEB\\administrator
+vti_timecreated:TR|11 Jan 2002 15:06:29 +0900
+vti_modifiedby:SR|SVR-KYOWEB\\administrator
+vti_backlinkinfo:VX|
+vti_extenderversion:SR|3.0.2.1105
+vti_timelastmodified:TR|11 Jan 2002 15:06:29 +0900

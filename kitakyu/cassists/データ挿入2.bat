@@ -1,0 +1,1 @@
+imp scassist/cassist file=C:\CassistS\scassist20021204.dmp Full=Y ignore=Y log=D:\scassist.log

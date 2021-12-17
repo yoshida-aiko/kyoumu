@@ -1,0 +1,378 @@
+    <SCRIPT ID="clientEventHandlersJS" LANGUAGE="javascript">
+    <!--
+
+    //************************************************************
+    //  [機能]  ヘルプ画面の表示
+    //  [引数]  なし
+    //  [戻値]  なし
+    //  [説明]
+    //************************************************************
+    function gf_OpenHelp() {
+
+        window.alert("No Avairable");
+    }
+
+    //************************************************************
+    //  [機能]  文字列ｵﾌﾞｼﾞｪｸﾄが半角英数であるか
+    //  [引数]  文字列ｵﾌﾞｼﾞｪｸﾄ
+    //  [戻値]  true:半角英数（0-9,a-Z,A-Z）、false:半角英数字以外が存在
+    //  [説明]  
+    //************************************************************
+    function IsHankakuEisu(moji){
+
+        for( var i=0; i<moji.length; i++ ){
+            if( escape(moji.charAt(i)) != moji.charAt(i) ){
+                return false;
+            }
+        }
+        
+        return true;
+        
+    }
+
+    //************************************************************
+    //  [機能]  文字列ｵﾌﾞｼﾞｪｸﾄが半角英数であるか
+    //  [引数]  文字列ｵﾌﾞｼﾞｪｸﾄ
+    //  [戻値]  true:半角英数記号（0-9,a-Z,A-Z）、false:半角英数字記号以外が存在
+    //  [説明]  
+    //************************************************************
+    function IsHankakuEisuKigo(moji){
+	
+		//半角英数記号チェック 	記号OK→ !"#$%&()-=^~\|@`[{:;+*}],.<>?/_ 
+		//						記号NG→ ' (シングルコーテーション)
+		if (!moji.match(/^[a-zA-Z0-9!\""#$%&()-=^~\\|@`\[{:;+*}\],.<>?\/_]+$/)) {
+		 	return false;
+		}
+		return true;
+    }
+    
+    //************************************************************
+    //  [機能]  文字列ｵﾌﾞｼﾞｪｸﾄが半角英数であるか
+    //  [引数]  文字列ｵﾌﾞｼﾞｪｸﾄ
+    //  [戻値]  true:半角、false:半角以外が存在
+    //  [説明]  サポートしているコードが多少異なる
+    //          半角カナがチェックできることは確認済み
+    //************************************************************
+    function IsHankaku(str){
+
+        if(parseFloat(navigator.appVersion) < 4.7 ){
+            var i,cnt = 0;
+            for(i=0; i<str.length; i++){
+                if( escape(str.charCodeAt(i)) < -95 ){
+                    return false;
+                }
+            }
+        }
+        else{
+            for( var i=0; i<str.length; i++ ){
+                if( !((str.charCodeAt(i) >=0 && str.charCodeAt(i) <= 255) 
+                    || (str.charCodeAt(i) >= 65377 && str.charCodeAt(i) <= 65439)) ){
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+
+    }
+
+    //************************************************************
+    //  [機能]  文字列ｵﾌﾞｼﾞｪｸﾄが半角数字とハイフンであるか
+    //  [引数]  文字列ｵﾌﾞｼﾞｪｸﾄ
+    //  [戻値]  true:半角、false:半角以外が存在
+    //  [説明]  サポートしているコードが多少異なる
+    //          半角カナがチェックできることは確認済み
+    //          2001/07/26追加
+    //************************************************************
+    function IsHankakuSujiHyphen(str){
+
+        //if(parseFloat(navigator.appVersion) < 4.7 ){
+        //  var i,cnt = 0;
+        //  for(i=0; i<str.length; i++){
+        //      if( escape(str.charCodeAt(i)) < -95 ){
+        //          return false;
+        //      }
+        //  }
+        //}
+        //else{
+        var i,cnt = 0;
+            for( var i=0; i<str.length; i++ ){
+                if( !((str.charCodeAt(i) >=48 && str.charCodeAt(i) <= 57) 
+                || (str.charCodeAt(i) == 45)) ){
+                    return false;
+                }
+            }
+        //}
+        
+        return true;
+    
+    }
+    
+    //************************************************************
+    //  [機能]  文字列ｵﾌﾞｼﾞｪｸﾄの文字の長さ(ﾊﾞｲﾄ数)を取得する
+    //  [引数]  文字列ｵﾌﾞｼﾞｪｸﾄ
+    //  [戻値]  文字列の長さ(ﾊﾞｲﾄ数)
+    //  [説明]  
+    //
+    //  ※ NN4では正常に動作しない
+    //************************************************************
+    function getLengthB(moji){
+
+        var i,cnt = 0;
+        for(i=0; i<moji.length; i++){
+            if (escape(moji.charAt(i)).length >= 4 ){
+                cnt+=2;
+            }
+            else{
+                cnt++;
+            }
+        }
+        return cnt;
+        
+    }
+
+    //************************************************************
+    //  [機能]  トリム関数。右も左もスペースは消します。
+    //  [引数]  psMoto  :トリム元文字列
+    //  [戻値]          :トリム後文字列
+    //  [説明]  
+    //************************************************************
+    function f_Trim(psMoto) {
+        var wiFG=0;
+        var wsRet="";
+        var wsRet2="";
+        var i;
+        var str=new String(psMoto);
+
+        for(i=0;i<str.length;i++){
+
+            if(str.charAt(i)!=' '){
+                wiFG=1;
+            }
+
+            if(wiFG==1){
+                wsRet+=str.charAt(i);
+            }       
+        }
+        wiFG=0
+        for(i=wsRet.length-1;i>=0;i--){
+
+            if(wsRet.charAt(i)!=' '){
+                wiFG=1;
+            }
+
+            if(wiFG==1){
+                wsRet2=wsRet.charAt(i)+wsRet2;
+            }       
+        }
+        return wsRet2;
+        
+    }
+
+    //************************************************************
+    //  [機能]  配列作成関数
+    //  [引数]  n       :設定配列
+    //  [戻値]          :
+    //  [説明]  
+    //************************************************************
+    function MakeArray(n){
+        this.length = n ;
+    }
+
+
+    //************************************************************
+    //  [機能]  日付チェック関数。
+    //  [引数]  f1      :チェック元文字列 YYYY/M/D 形式で入力
+    //  [戻値]          :成功：０   失敗：１
+    //  [説明]  エラーメッセージは関数内で出します。
+    //
+    //  [使用例]
+    //    window.alert("TEST");
+    //    //for test
+    //    if( chk_dateSplit(document.frm.txtEMAILADR.value)==1 ){
+    //        window.alert("失敗");
+    //        document.frm.txtEMAILADR.focus();
+    //        return 1;
+    //    }
+    //    window.alert("成功");
+    //************************************************************
+    function IsDate(f1){
+        return chk_dateSplitExt(f1,false);
+    }
+    function chk_dateSplit(f1){
+        return chk_dateSplitExt(f1,true);
+    }
+    function chk_dateSplitExt(f1,bMsgflg){
+    
+        //月別日数の配列作成
+        mon = new MakeArray(13);
+        mon[0]= 00;
+        mon[1]= 31;
+        mon[2]= 28;
+        mon[3]= 31;
+        mon[4]= 30;
+        mon[5]= 31;
+        mon[6]= 30;
+        mon[7]= 31;
+        mon[8]= 31;
+        mon[9]= 30;
+        mon[10]= 31;
+        mon[11]= 30;
+        mon[12]= 31;
+               
+        szSplit = new MakeArray(3);
+        szSplit = f1.split('/',3) ;
+
+        if (isNaN(szSplit[0]) || szSplit[0]==""){
+            if( bMsgflg == true ) alert("YYYY/M/D形式で入力してください");
+            return(1);
+        } else if(isNaN(szSplit[1]) || szSplit[1]==""){
+            if( bMsgflg == true ) alert("YYYY/M/D形式で入力してください");
+            return(1);
+        } else if(isNaN(szSplit[2]) || szSplit[2]==""){
+            if( bMsgflg == true ) alert("YYYY/M/D形式で入力してください");
+            return(1);
+        }   
+            
+        //桁で切り取る
+        years   = parseInt(szSplit[0],10);
+        months  = parseInt(szSplit[1],10);
+        days    = parseInt(szSplit[2],10);
+
+        //月のチェック１～１２までの範囲
+        if(months <1 || months > 12){
+            if( bMsgflg == true ) alert("月の入力に誤りがあります");
+            f1.value = "";
+            return(1);
+        }
+        //閏年判定
+        if(years % 4 == 0)
+        {
+            mon[2] = 29;
+            if(years % 100 == 0)
+            mon[2] = 28;
+            if(years % 400 == 0)
+            mon[2] = 29;
+        }
+        if(years < 1900)
+        {
+            if( bMsgflg == true ) alert("日付の入力に誤りがあります");
+            f1.value = "";
+            return(1);
+        }
+        else if((months < 1) || (months > 12))
+        {
+            if( bMsgflg == true ) alert("日付の入力に誤りがあります");
+            f1.value = "";
+            return(1);
+        }
+        else if((days < 1) || (days > mon[months]))
+        {
+            if( bMsgflg == true ) alert("日付の入力に誤りがあります");
+            f1.value = "";
+            return(1);
+        }
+
+		if (months < 10) { months = "0" + months; }
+		if (days < 10) { days = "0" + days; }
+
+		f1 = (years + "/" + months + "/" + days);
+        return(0);
+    }
+
+    //************************************************************
+    //  [機能]  日付文字列取得関数。
+    //  [引数]  f1      :Date型変数
+    //  [戻値]          :文字列(YYYY/MM/DD)
+    //  [説明]
+    //
+    //************************************************************
+    function f_getDateString(f1){
+        var a;
+        a="";
+        a=a + f1.getYear() + "/" + f1.getMonth() + "/" + f1.getDate();
+        return a;
+    }
+
+
+    //************************************************************
+    //  [機能]  ２つの日付の大小関係を比較する
+    //  [引数]  f1      :日付１
+    //          f2      :日付２
+    //  [戻値]  f1<f2の場合正数、f1=f2の場合０、f1>f2の場合負数
+    //  [説明]  日付は正しい日付とする
+    //************************************************************
+    function DateParse(f1,f2){
+    
+        var x1 = new Date(f1);
+        var x2 = new Date(f2);
+        return (Date.parse(x2) - Date.parse(x1));
+    
+    }
+      
+
+
+	//**************************************************************************************
+	//////////////////////////   右から指定数の文字を抜き取る   ////////////////////////////
+	//--------------------------------------------------------------------------------------
+	// Arguments: String length
+	// Return:  String
+	//**************************************************************************************
+	function gf_Right(str,len){
+	 if(str==null) return "";
+	 if(len==null) return "";
+	 if(isNaN(len)) return "";
+	 if(str.length<len) return "";
+	 
+	 str = str.substr(str.length-len,len);
+	 return str;
+	}
+
+	//************************************************************
+	//  [機能]  カレンダーを表示。
+	//  [引数]  p_inpSpace：日付を表示させる場所のname
+	//  [戻値]  
+	//  [説明]  日付を取得するためのカレンダーを表示させる。
+	//  例)　<input type="button" class="button" onclick="fcalender('Kaisibi')" value="選択">
+	//************************************************************
+	function fcalender(p_inpSpace){
+	 var cal = "../../common/com_select/SEL_CAL/default.asp?txtDay="+p_inpSpace
+	 var w=window.open(cal,"calender","status=no,width=200,height=200,resizable=1,scrolbars=1,location=no,menubar=no,toolbar=no")
+	 if(!w.opener)w.opener=self
+	 if(navigator.appName=="Netscape"&&navigator.appVersion.charAt(0)=="2"){
+	 	w.location.href=location.href.substring(0,location.href.lastIndexOf("/")+1)+"../../common/com_select/SEL_CAL/default.asp"
+	 }
+	}
+	
+	//************************************************************
+	//	[機能]	カレンダー表示
+	//	[引数]	w_txtname : 日付を表示させる場所のname
+	//	[戻値]	
+	//	[説明]	日付を取得するためのカレンダーを表示させる。
+	//	例)　<input type="button" class="button" onclick="fcalender('Kaisibi')" value="選択">
+	//	
+	//	作成者：shin 2002/05/13 ver.2
+	//************************************************************
+	function _fcalender(w_txtname){
+		var wWidth = 250 , wHeigh = 230 ;
+		var PositionX,PositionY;
+		
+		var wStr = "../../common/com_select/SEL_CAL/calender.asp?txtName="  + w_txtname;
+		var wCondition = "toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=0,resizable=0,titlebar=0,width=" + wWidth + ",height=" + wHeigh;
+		
+		PositionX = window.screen.availWidth  / 2 - wWidth / 2;
+		PositionY = window.screen.availHeight / 2 - wHeigh / 2;
+		
+		wCondition = wCondition + ",left=" + PositionX + ",top=" + PositionY;
+		
+		var popup = window.open(wStr,"calender",wCondition);
+		
+		if(!popup.opener)popup.opener=self;
+		
+		if(navigator.appName=="Netscape"&&navigator.appVersion.charAt(0)=="2"){
+	 		popup.location.href = location.href.substring(0,location.href.lastIndexOf("/")+1)+"../../common/com_select/SEL_CAL/calender.asp";
+	 	}
+	}
+	
+    //-->
+    </SCRIPT>

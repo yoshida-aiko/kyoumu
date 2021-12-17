@@ -1,0 +1,104 @@
+<html>
+
+<head>
+<title>テキスト検索</title>
+<meta NAME="FORMATTER" CONTENT="Microsoft Visual InterDev 1.0">
+
+<base HREF="http://10.1.100.9/cassist/search.htm">
+</head>
+
+<body>
+
+<h1><a NAME="top">テキスト検索</a></h1>
+
+<hr>
+
+<p>以下のフォームを使用して、この Web 
+内のドキュメントの特定の単語または 
+特定の単語の組み合わせを検索してください。 
+テキスト検索エンジンは合致するドキュメントのリストを順に表示します。 
+各リストの項目は適合するドキュメントにリンクしています。 
+ドキュメントにタイトルがある場合は、タイトルが表示され、その他の場合は 
+ドキュメントのファイル名のみが表示されます。 簡単な <a HREF="#querylang">クエリー言語</a> の説明は例にあります。</p>
+<!--webbot BOT="Search" S-LINK S-FIELDS="TimeStamp,DocumentK," S-INDEX="All" S-DSN="default" TAG="FORM" S-TEXT="検索する文字" I-SIZE="20" S-SUBMIT="検索開始" S-CLEAR="クリア" U-DOC-URL="search.htm" startspan b-useindexserver="1" --><form action="_vti_bin/search.htm0.idq" method="POST"><p><b>検索する文字 </b><input type="text" name="UserRestriction" size="20" value="<%if UserRestriction NE VT_EMPTY%><%if UserRestriction NE "UserRestriction"%><%UserRestriction%><%endif%><%endif%>"></p><p><input type="submit" value="検索開始"><input type="reset" value="クリア"></p></form><!--webbot bot="Search" endspan i-checksum="13147" -->
+
+<table BORDER="0">
+  <tr>
+    <td><%if CiContainsFirstRecord EQ 0%><form ACTION="_vti_bin/search.htm0.idq" METHOD="POST">
+      <input TYPE="HIDDEN" NAME="CiBookmark" VALUE="<%CiBookmark%>"><input TYPE="HIDDEN" NAME="CiBookmarkSkipCount" VALUE="-<%EscapeRAW CiMaxRecordsPerPage%>"><input TYPE="HIDDEN" NAME="CiMaxRecordsPerPage" VALUE="<%EscapeRAW CiMaxRecordsPerPage%>"><input TYPE="HIDDEN" NAME="CiRestriction" VALUE="<%CiRestriction%>"><input TYPE="HIDDEN" NAME="CiScope" VALUE="<%CiScope%>"><%if CiMaxRecordsPerPage EQ 1%><input TYPE="SUBMIT" VALUE="前の検索結果"><%else%><input TYPE="SUBMIT" VALUE="前の <%CiMaxRecordsPerPage%> 件"><%endif%>
+    </form>
+    <%endif%></td>
+    <td><%if CiContainsLastRecord EQ 0%><form ACTION="_vti_bin/search.htm0.idq" METHOD="POST">
+      <input TYPE="HIDDEN" NAME="CiBookmark" VALUE="<%CiBookmark%>"><input TYPE="HIDDEN" NAME="CiBookmarkSkipCount" VALUE="<%EscapeRAW CiMaxRecordsPerPage%>"><input TYPE="HIDDEN" NAME="CiMaxRecordsPerPage" VALUE="<%EscapeRAW CiMaxRecordsPerPage%>"><input TYPE="HIDDEN" NAME="CiRestriction" VALUE="<%CiRestriction%>"><input TYPE="HIDDEN" NAME="CiScope" VALUE="<%CiScope%>"><%if CiRecordsNextPage EQ 1%><input TYPE="SUBMIT" VALUE="次の検索結果"><%else%><input TYPE="SUBMIT" VALUE="次の <%CiRecordsNextPage%> 件"><%endif%>
+    </form>
+    <%endif%></td>
+  </tr>
+</table>
+<%if CiMatchedRecordCount EQ 0%>
+<p><b>ドキュメントが見つかりません。 もう一度行ってください。</b></p>
+<%else%>
+<p><b>次の数のドキュメントが見つかりました : <%CiMatchedRecordCount%>. ドキュメントを表示する場合はクリックします。もう一度検索する場合は、検索する文字列を送信してください。</b></p>
+
+<table BORDER>
+  <caption><b>検索結果</b></caption>
+  <tr>
+    <td><b>ドキュメント</b></td>
+    <td><b>日付</b></td>
+    <td ALIGN="right"><b>サイズ</b></td>
+  </tr>
+  <%endif%><%begindetail%>
+  <tr>
+    <td><a HREF="<%EscapeURL vpath%>"><%if DocTitle ISEMPTY%><%Filename%><%else%><%DocTitle%><%endif%></a></td>
+    <td><%write%> GMT</td>
+    <td ALIGN="right"><%size%></td>
+  </tr>
+  <%enddetail%><%if CiMatchedRecordCount GT 0%>
+</table>
+<%endif%>
+<hr>
+
+<h2><a NAME="querylang">クエリー言語</a></h2>
+
+<p>テキスト検索エンジンは、キーワード AND、OR、および NOT 
+を含み、 
+かっこでグループ化された任意のブール値表現からクエリーを作成することができます。例 
+: </p>
+
+<blockquote>
+  <dl>
+    <dt><strong><tt>情報 取得</tt></strong></dt>
+    <dd>'情報' または '取得' を含むドキュメントを検索します。 <br>
+      <br>
+    </dd>
+    <dt><strong><tt>情報 or 取得</tt></strong></dt>
+    <dd>上の説明と同じです。<br>
+      <br>
+    </dd>
+    <dt><strong><tt>情報 and 取得</tt></strong></dt>
+    <dd>'情報' と '取得' の両方を含む ドキュメントを検索します。 <br>
+      <br>
+    </dd>
+    <dt><strong><tt>情報 not 取得 </tt></strong></dt>
+    <dd>'情報' を含み、'取得' を含まないドキュメントを検索します。 <br>
+      <br>
+    </dd>
+    <dt><strong><tt>(情報 not 取得) and WAIS</tt></strong></dt>
+    <dd>上の条件に加えて、'WAIS' を含むドキュメントを検索します。 <br>
+      <br>
+    </dd>
+    <dt><strong><tt>web*</tt></strong></dt>
+    <dd>'web' で始まる言葉を含むドキュメントを検索します。<br>
+      <br>
+    </dd>
+  </dl>
+</blockquote>
+
+<h5><a HREF="#top">トップへ戻る</a></h5>
+
+<hr>
+
+<h5>作成者の情報をここに記述してください。<br>
+Copyright (C) 1995 会社名 All rights reserved.<br>
+</h5>
+</body>
+</html>

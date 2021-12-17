@@ -1,0 +1,7 @@
+[Query]
+citemplate=/cassist/_derived/search.htm0.htx
+ciflags=DEEP
+cisort=Rank[d]
+cirestriction=(%UserRestriction%) & ! #vpath *\_vti* & ! #vpath *\_* 
+ciscope=/cassist
+cicolumns=DocTitle,filename,vpath,write,size
