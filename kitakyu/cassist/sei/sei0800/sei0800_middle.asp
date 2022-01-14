@@ -2,9 +2,9 @@
 <%
 '/************************************************************************
 ' システム名: 教務事務システム
-' 処  理  名: 成績登録
-' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0100/sei0100_middle.asp
-' 機      能: 下ページ 成績登録の検索を行う
+' 処  理  名: 再試験成績登録
+' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0800/sei0800_middle.asp
+' 機      能: 下ページ 再試験成績登録の検索を行う
 '-------------------------------------------------------------------------
 ' 引      数:教官コード		＞		SESSIONより（保留）
 '           :年度			＞		SESSIONより（保留）
@@ -17,11 +17,8 @@
 '			■表示ボタンクリック時
 '				下のフレームに指定した条件にかなう調査書の内容を表示させる
 '-------------------------------------------------------------------------
-' 作      成: 2001/07/26 前田 智史
-' 変      更: 2001/08/21 伊藤 公子
-' 変      更: 2001/08/21 伊藤 公子 ヘッダ部切り離し
-' 変      更: 2002/05/02 進   浩人 特別活動の遅刻もエクセル貼り付け対応に
-' 変      更: 2017/12/26 西村		科目名引き継ぎを追加
+' 作      成: 2021/12/23 吉田　成績登録画面を流用し作成
+' 変      更: 
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -102,14 +99,14 @@ Sub Main()
 '*  [戻値]  なし
 '*  [説明]  
 '********************************************************************************
-
+'response.write "middle START" & "<BR>"
     Dim w_iRet              '// 戻り値
     Dim w_sSQL              '// SQL文
 	Dim w_sWinTitle, w_sMsgTitle, w_sMsg, w_sRetURL, w_sTarget
 
 	'Message用の変数の初期化
 	w_sWinTitle="キャンパスアシスト"
-	w_sMsgTitle="成績登録"
+	w_sMsgTitle="再試験成績登録"
 	w_sMsg=""
     w_sRetURL= C_RetURL & C_ERR_RETURL
 	w_sTarget=""
@@ -142,7 +139,7 @@ Sub Main()
 		If w_iRet = 1 Then
 			m_iKikan = "NO"	'成績入力期間外の場合は、表示のみ
 		End If
-		
+
 		if not f_GetUpdateDate(m_iNendo,m_sKamokuCd,m_sSikenKBN,m_TUKU_FLG,m_sFirstGakusekiNo,m_UpdateDate) then
 			m_bErrFlg = True
 			Exit Do
@@ -227,7 +224,10 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_NENDO = T24_SIKEN_NITTEI.T24_NENDO"
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_DAIBUNRUI_CD=" & cint(C_SIKEN)
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_NENDO=" & Cint(m_iNendo)
-		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & Cint(m_sSikenKBN)
+		' コメント　UPD
+		' w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & Cint(m_sSikenKBN)
+		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & C_SIKEN_SAISI
+		' コメント　UPD
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_CD='0'"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_GAKUNEN=" & Cint(m_sGakuNo)
 		
@@ -440,6 +440,8 @@ function f_GetUpdateDate(p_Nendo,p_KamokuCd,p_ShikenKbn,p_TUKU_FLG,p_FirstGakuse
 	w_Sql = w_Sql & " and	" & w_Table & "_NENDO = " & p_Nendo
 	w_Sql = w_Sql & " and	" & w_KamokuName & "= '"   & p_KamokuCd   & "' "
 	
+' response.write "w_Sql:" &  w_Sql & "<BR>"
+
 	If gf_GetRecordset(w_Rs,w_Sql) <> 0 Then
 		'ﾚｺｰﾄﾞｾｯﾄの取得失敗
 		msMsg = Err.description
@@ -447,7 +449,7 @@ function f_GetUpdateDate(p_Nendo,p_KamokuCd,p_ShikenKbn,p_TUKU_FLG,p_FirstGakuse
 	End If
 	
 	p_UpdateDate = gf_YYYY_MM_DD(w_Rs(0),"/")
-	
+
 	f_GetUpdateDate = true
 	
 end function
@@ -551,7 +553,7 @@ End If
 		//一旦空ページを開いてから、新ウィンドウに対してsubmitする。
 		nWin=open("","Paste","location=no,menubar=no,resizable=yes,scrollbars=no,scrolling=no,status=no,toolbar=no,width=300,height=600,top=0,left=0");
 		parent.main.document.frm.target="Paste";
-		parent.main.document.frm.action="sei0100_paste.asp";
+		parent.main.document.frm.action="sei0800_paste.asp";
 		parent.main.document.frm.submit();
 	
 	}
@@ -607,9 +609,9 @@ End If
 			<td>
 				<%
 				If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then
-					call gs_title(" 成績登録 "," 登　録 ")
+					call gs_title(" 再試験成績登録 "," 登　録 ")
 				Else
-					call gs_title(" 成績登録 "," 表　示 ")
+					call gs_title(" 再試験成績登録 "," 表　示 ")
 				End If
 				%>
 			</td>
@@ -623,8 +625,7 @@ End If
 						</th>
 					</tr>
 					<tr>
-						<th class=header3 width="96"  align="center">成績入力期間</th><td class=detail width="239"  align="center" colspan="2"><%=m_iNKaishi%> ～ <%=m_iNSyuryo%></td>
-						<th class=header3 width="96"  align="center">欠課入力期間</th><td class=detail width="239"  align="center" colspan="2"><%=m_iKekkaKaishi%> ～ <%=m_iKekkaSyuryo%></td>
+						<th class=header3 width="96"  align="center">再試験成績入力期間</th><td class=detail width="239"  align="center" colspan="2"><%=m_iNKaishi%> ～ <%=m_iNSyuryo%></td>
 					</tr>
 					<tr>
 						<th class=header3 width="96"  align="center">実施科目</th>
@@ -645,9 +646,6 @@ End If
 		<tr>
 			<td align="center">
 				<span class=msg2>
-				※「日々計」は、授業出欠入力メニューより日々入力された上記試験までの出欠状況です。<br>
-				※「対象外」は、公欠などの累計を入力してください。<br>
-				※ヘッダの文字色が「<FONT COLOR="#99CCFF">成績</FONT>」のようになっている部分をクリックすると、Excel貼り付け用の画面が開きます。<br>
 				<%
 				'通常授業と特別活動で表示を変える
 				If m_TUKU_FLG = C_TUKU_FLG_TUJO Then
@@ -672,79 +670,46 @@ End If
 		</tr>
 		<tr>
 			<td align="center" valign="bottom" nowrap>
-				
-				<!--通常授業と特別活動で表示を変える。-->
-				<% If m_TUKU_FLG = C_TUKU_FLG_TUJO Then %>
-					
-					<table class="hyo" border="1" align="center" width="<%= gf_IIF(m_SchoolFlg,760,710) %>">
-						<tr>
-							<th class="header3" colspan="14" nowrap align="center">
-								総授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtSouJyugyou" value="<%= Request("hidSouJyugyou") %>"><% Else %><%= Request("hidSouJyugyou") %><% End if%>　
-								純授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtJunJyugyou" value="<%= Request("hidJunJyugyou") %>"><% Else %><%= Request("hidJunJyugyou") %><% End if%>　　　
-								<%
-								if m_SchoolFlg then
-									Call setHyokaType()
-								%>
-								<input type="checkbox" name="chkMiHyoka" value="4" onClick="setHyoka();" <%=m_Disabled%> <%=m_Checked%>>未評価　
-								<% end if %>
-							</th>
-						</tr>                                                                                                                                                 
-						
-						<tr>
-							<th class="header3" rowspan="2" width="65"  nowrap><%=gf_GetGakuNomei(m_iNendo,C_K_KOJIN_1NEN)%></th>
-							<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
-							<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
-							<th class="header3" rowspan="2" width="50"  nowrap onClick="f_Paste('Seiseki')"><FONT COLOR="#99CCFF">成績</FONT></th>
-							<th class="header3" rowspan="2" width="50"  nowrap>評価</th>
-							<th class="header3" colspan="2" width="110" nowrap>遅刻</th>
-							<th class="header3" colspan="3" width="165" nowrap>欠課</th>
-							
-							<% if m_SchoolFlg then %>
-								<th class="header3" rowspan="2" width="50"  nowrap>評価<br>不能</th>
+				<table class="hyo" border="1" align="center" width="<%= gf_IIF(m_SchoolFlg,760,710) %>">
+					<tr>
+						<th class="header3" colspan="14" nowrap align="center">
+						<!--  コメント　削除対象
+							総授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtSouJyugyou" value="<%= Request("hidSouJyugyou") %>"><% Else %><%= Request("hidSouJyugyou") %><% End if%>　
+							純授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtJunJyugyou" value="<%= Request("hidJunJyugyou") %>"><% Else %><%= Request("hidJunJyugyou") %><% End if%>　　　
+							-->
+							<%
+							if m_SchoolFlg then
+								Call setHyokaType()
+							%>
+							<input type="checkbox" name="chkMiHyoka" value="4" onClick="setHyoka();" <%=m_Disabled%> <%=m_Checked%>>未評価　
 							<% end if %>
-							
-						</tr>
+						</th>
+					</tr>                                                                                                                                                 
+					
+					<tr>
+						<th class="header3" rowspan="2" width="65"  nowrap><%=gf_GetGakuNomei(m_iNendo,C_K_KOJIN_1NEN)%></th>
+						<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
+						<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
+						<th class="header3" rowspan="2" width="50"  nowrap >成績</th>
+						<th class="header3" rowspan="2" width="50"  nowrap>評価</th>
+						<!--  コメント　削除対象
+						<th class="header3" colspan="2" width="110" nowrap>遅刻</th>
+						<th class="header3" colspan="3" width="165" nowrap>欠課</th>
+						-->
+						<% if m_SchoolFlg then %>
+							<th class="header3" rowspan="2" width="50"  nowrap>評価<br>不能</th>
+						<% end if %>
 						
-						<tr>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">前中</span></th>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">前末</span></th>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">後中</span></th>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">学末</span></th>
-							<th class="header2" width="55" nowrap onClick="f_Paste('Chikai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">入力</FONT></span></th>
-							<th class="header2" width="55" nowrap><span style="font-size:10px;">日々計</span></th>
-							<th class="header2" width="55" nowrap onClick="f_Paste('Kekka')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象</FONT></span></th>
-							<th class="header2" width="55" nowrap onClick="f_Paste('KekkaGai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象外</FONT></span></th>
-							<th class="header2" width="55" nowrap><span style="font-size:10px;">日々計</span></th>
-						</tr>
-					</table>
-				<% else %>
-					<table class="hyo" border=1 align="center" width="710" nowrap>
-						<tr>
-							<th class="header3" colspan="13" nowrap align="center">
-								総授業数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="5" style="width:30px" name="txtSouJyugyou" value="<%= Request("hidSouJyugyou") %>"><% Else %><%= Request("hidSouJyugyou") %><% End if%>　
-								純授業数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="5" style="width:30px" name="txtJunJyugyou" value="<%= Request("hidJunJyugyou") %>"><% Else %><%= Request("hidJunJyugyou") %><% End if%>　　　
-							</th>
-						</tr>
-						
-						<tr>
-							<th class="header3" rowspan="2" width="65" nowrap><%=gf_GetGakuNomei(m_iNendo,C_K_KOJIN_1NEN)%></th>
-							<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
-							<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
-							<th class="header3" rowspan="2" width="50" nowrap onClick="f_Paste('Seiseki')"><FONT COLOR="#99CCFF">成績</FONT></th>
-							<th class="header3" rowspan="2" width="50" nowrap>評価</th>
-							<th class="header3" rowspan="2" width="100" nowrap onClick="f_Paste('Chikai')"><FONT COLOR="#99CCFF">遅刻</FONT></th>
-							<th class="header3" colspan="2" width="165" nowrap>欠課</th>
-						</tr>
-						<tr>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">前中</FONT></span></th>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">前末</span></th>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">後中</span></th>
-							<th class="header2" width="30" nowrap><span style="font-size:10px;">学末</span></th>
-							<th class="header2" width="80" nowrap onClick="f_Paste('Kekka')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象</FONT></span></th>
-							<th class="header2" width="85" nowrap onClick="f_Paste('KekkaGai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象外</FONT></span></th>
-						</tr>
-					</table>
-				<% end if %>
+					</tr>
+					
+					<tr>
+						<th class="header2" width="30" nowrap><span style="font-size:10px;">前中</span></th>
+						<th class="header2" width="30" nowrap><span style="font-size:10px;">前末</span></th>
+						<th class="header2" width="30" nowrap><span style="font-size:10px;">後中</span></th>
+						<th class="header2" width="30" nowrap><span style="font-size:10px;">学末</span></th>
+					</tr>
+				</table>
+
 			</td>
 		</tr>
 	</table>

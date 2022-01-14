@@ -3,7 +3,7 @@
 '/************************************************************************
 ' システム名: 教務事務システム
 ' 処  理  名: 成績登録
-' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0100/sei0100_upd_tuku.asp
+' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0800/sei0800_upd_tuku.asp
 ' 機      能: 下ページ 成績登録の登録、更新
 '-------------------------------------------------------------------------
 ' 引      数: NENDO          '//処理年
@@ -18,7 +18,7 @@
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
-<!--#include file="sei0100_upd_func.asp"-->
+<!--#include file="sei0800_upd_func.asp"-->
 <%
 '/////////////////////////// ﾓｼﾞｭｰﾙCONST /////////////////////////////
     Const DebugPrint = 0
@@ -130,23 +130,23 @@ Dim i,w_Today
     Do 
 		w_Today = gf_YYYY_MM_DD(m_iNendo & "/" & month(date()) & "/" & day(date()),"/")
 		
-		'// 減算区分取得(sei0100_upd_func.asp内関数)
+		'// 減算区分取得(sei0800_upd_func.asp内関数)
 		If Not Incf_SelGenzanKbn() Then Exit Function
 
-		'// 欠課・欠席設定取得(sei0100_upd_func.asp内関数)
+		'// 欠課・欠席設定取得(sei0800_upd_func.asp内関数)
 		If Not Incf_SelM15_KEKKA_KESSEKI() then Exit Function
 
-		'// 累積区分取得(sei0100_upd_func.asp内関数)
+		'// 累積区分取得(sei0800_upd_func.asp内関数)
 		If Not Incf_SelKanriMst(m_iNendo,C_K_KEKKA_RUISEKI) then Exit Function
 
 		For i=1 to i_max
 
-			'// 実授業時間取得(sei0100_upd_func.asp内関数)
+			'// 実授業時間取得(sei0800_upd_func.asp内関数)
 			Call Incs_GetJituJyugyou(i)
 
 			'// 学期末の場合、最低時間を取得する
 			if Cint(m_sSikenKBN) = C_SIKEN_KOU_KIM then
-				'// 最低時間取得(sei0100_upd_func.asp内関数)
+				'// 最低時間取得(sei0800_upd_func.asp内関数)
 				If Not Incf_GetSaiteiJikan(i) then Exit Function
 			End if
 			
@@ -279,7 +279,7 @@ Sub showPage()
 		alert("<%=C_TOUROKU_OK_MSG%>");
 
 	    document.frm.target = "main";
-	    document.frm.action = "./sei0100_bottom.asp"
+	    document.frm.action = "./sei0800_bottom.asp"
 	    document.frm.submit();
 	    return;
 

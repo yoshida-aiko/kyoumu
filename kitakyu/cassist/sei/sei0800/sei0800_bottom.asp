@@ -2,9 +2,9 @@
 <%
 '/************************************************************************
 ' システム名: 教務事務システム
-' 処  理  名: 成績登録
-' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0100/sei0100_bottom.asp
-' 機      能: 下ページ 成績登録の検索を行う
+' 処  理  名: 再試験成績登録
+' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0800/sei0800_bottom.asp
+' 機      能: 下ページ 再試験成績登録の検索を行う
 '-------------------------------------------------------------------------
 ' 引      数:教官コード		＞		SESSIONより（保留）
 '           :年度			＞		SESSIONより（保留）
@@ -17,14 +17,8 @@
 '			■表示ボタンクリック時
 '				下のフレームに指定した条件にかなう調査書の内容を表示させる
 '-------------------------------------------------------------------------
-' 作      成: 2001/07/26 前田 智史
-' 変      更: 2001/08/21 伊藤 公子
-' 変      更: 2001/08/21 伊藤 公子 ヘッダ部切り離し
-' 変      更: 2002/03/20 松尾		NULLを""で表示する
-' 変      更: 2017/12/26 西村		科目名引き継ぎを追加
-' 変      更: 2018/03/22 西村		開設時期項目追加(非表示)  '2019/12/06 kiyomto ソースからこの対応箇所が漏れており追加
-' 修　    正: 2019/03/06 藤林		成績登録時に、必修か選択科目のうち選択している学生のみを取得する様に修正
-' 変     更: 2020/03/09 清本		成績登録時に、開設時期を個人履修データから判断する
+' 作      成: 2021/12/23 吉田　成績登録画面を流用し作成
+' 変      更: 
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -57,6 +51,8 @@
 	
 	Dim m_iSouJyugyou		'総授業時間
 	DIm m_iJunJyugyou		'純授業時間
+
+	Dim m_SeisekiIndex 'ADD 2022/1/12
 	
 	Public	m_iKikan		'入力期間フラグ
 	Public	m_bKekkaNyuryokuFlg		'欠課入力可能ﾌﾗｸﾞ(True:入力可 / False:入力不可)
@@ -68,6 +64,8 @@
 	
 	Public m_sSyubetu
 	Dim m_SchoolFlg
+
+	Public Const C_GOUKAKUTEN = 60  '合格点
 	
 '///////////////////////////メイン処理/////////////////////////////
 
@@ -83,14 +81,13 @@ Sub Main()
 '*  [戻値]  なし
 '*  [説明]  
 '********************************************************************************
-
     Dim w_iRet              '// 戻り値
     Dim w_sSQL              '// SQL文
 	Dim w_sWinTitle, w_sMsgTitle, w_sMsg, w_sRetURL, w_sTarget
-
+'response.write "bottom START" & "<BR>"
 	'Message用の変数の初期化
 	w_sWinTitle="キャンパスアシスト"
-	w_sMsgTitle="成績登録"
+	w_sMsgTitle="再試験成績登録"
 	w_sMsg=""
     w_sRetURL= C_RetURL & C_ERR_RETURL
 	w_sTarget=""
@@ -108,26 +105,27 @@ Sub Main()
 			m_sErrMsg = "データベースとの接続に失敗しました。"
 			Exit Do
 		End If
+
 		'//不正アクセスチェック
 		Call gf_userChk(session("PRJ_No"))
-		
+
 		'// ﾊﾟﾗﾒｰﾀSET
 		Call s_SetParam()
-		
+			
 		'//評価不能チェックの処理は、熊本だけのため学校番号のチェック
 		'//Trueなら熊本電波
 		if not gf_ChkDisp(C_DATAKBN_DISP,m_SchoolFlg) then
 			m_bErrFlg = True
 			Exit Do
 		End If
-		
+
 		'//期間データの取得
 		If f_Nyuryokudate() = 1 Then
 			m_iKikan = "NO"
 		else
 			m_iKikan = ""
 		End If
-		
+
 		'=================
 		'//出欠欠課の取り方を取得
 		'=================
@@ -136,6 +134,7 @@ Sub Main()
 			m_bErrFlg = True
 			Exit Do
 		End If
+
 		'=================
 		'//特別活動を取得
 		'=================
@@ -144,9 +143,9 @@ Sub Main()
 			m_bErrFlg = True
 			Exit Do
 		End If
-		
+	
 		'**********************************************************
-		'通常授業と特別活動で、とって来る場所が変わる。
+		'通常授業のみ表示　（特別活動は表示しない）
 		'**********************************************************
 		If m_TUKU_FLG = C_TUKU_FLG_TUJO then  '通常授業の場合
 			'=================
@@ -157,8 +156,8 @@ Sub Main()
 			If f_GetKamokuInfo(m_iKamoku_Kbn,m_iHissen_Kbn,m_ilevelFlg) <> 0 Then 
 				m_bErrFlg = True
 				Exit Do
-			End If
-			
+			End If			
+
 			'===============================
 			'//成績、学生データ取得
 			'===============================
@@ -173,25 +172,14 @@ Sub Main()
 			'===============================
 			'//欠課数の取得
 			'===============================
-			If f_GetSyukketu() <> 0 Then m_bErrFlg = True : Exit Do
-			
-		Else
-			'===============================
-			'//成績、学生データ取得
-			'===============================
-			If f_getTUKUclass(m_iNendo,m_sKamokuCd,m_sGakuNo,m_sClassNo) <> 0 Then m_bErrFlg = True : Exit Do
-			If m_rs.EOF Then
-				Call ShowPage_No()
-				Exit Do
-			End If
-			
+			' If f_GetSyukketu() <> 0 Then m_bErrFlg = True : Exit Do		
 	    End If
 		
 	   '// ページを表示
 	   Call showPage()
 	   Exit Do
 	Loop
-	
+		
 	'// ｴﾗｰの場合はｴﾗｰﾍﾟｰｼﾞを表示
 	If m_bErrFlg = True Then
 		w_sMsg = gf_GetErrMsg()
@@ -213,7 +201,7 @@ Sub s_SetParam()
 
 	m_iNendo	= request("txtNendo")
 	m_sKyokanCd	= request("txtKyokanCd")
-	m_sSikenKBN	= Cint(request("txtSikenKBN"))
+	m_sSikenKBN	= C_SIKEN_KOU_KIM
 	m_sGakuNo	= Cint(request("txtGakuNo"))
 	m_sClassNo	= Cint(request("txtClassNo"))
 	m_sKamokuCd	= request("txtKamokuCd")
@@ -240,14 +228,14 @@ Function f_GetSyukketu()
     Err.Clear
 	
     f_GetSyukketu = 1
-	
+
 	Do
 		'==========================================
 		'//科目担当教官の教官CDの取得
 		'==========================================
         w_iRet = f_GetTantoKyokan2(w_sTKyokanCd)
 		If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
-		
+	
 		'==========================================
 		'//試験科目が前期のみか通年かを調べる
 		'==========================================
@@ -269,7 +257,6 @@ Function f_GetSyukketu()
 			m_Rs.movefirst
 		end if
 
-		
 		'==========================================
 		'//科目に対する結果,遅刻の値取得
 		'==========================================
@@ -410,42 +397,19 @@ Dim w_iNyuNendo
 		w_sSQL = ""
 		w_sSQL = w_sSQL & " SELECT "
 		w_sSQL = w_sSQL & " A.T16_SEI_TYUKAN_Z AS SEI1,A.T16_SEI_KIMATU_Z AS SEI2,A.T16_SEI_TYUKAN_K AS SEI3,A.T16_SEI_KIMATU_K AS SEI4, "
-		
-		Select Case m_sSikenKBN
-			Case C_SIKEN_ZEN_TYU
-				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_Z AS SEI,A.T16_KEKA_TYUKAN_Z AS KEKA,A.T16_KEKA_NASI_TYUKAN_Z AS KEKA_NASI,A.T16_CHIKAI_TYUKAN_Z AS CHIKAI,A.T16_HYOKAYOTEI_TYUKAN_Z AS HYOKAYOTEI, "
-				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_TYUKAN_Z as SOUJI, A.T16_JUNJIKAN_TYUKAN_Z as JYUNJI, "
-				
-				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_Z as DataKbn ,"
-				
-			Case C_SIKEN_ZEN_KIM
-				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_Z AS SEI,A.T16_KEKA_KIMATU_Z AS KEKA,A.T16_KEKA_NASI_KIMATU_Z AS KEKA_NASI,A.T16_CHIKAI_KIMATU_Z AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_Z AS HYOKAYOTEI, "
-				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_KIMATU_Z as SOUJI, A.T16_JUNJIKAN_KIMATU_Z as JYUNJI, "
-				
-				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_Z as DataKbn,"
-				
-			Case C_SIKEN_KOU_TYU
-				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_K AS SEI,A.T16_KEKA_TYUKAN_K AS KEKA,A.T16_KEKA_NASI_TYUKAN_K AS KEKA_NASI,A.T16_CHIKAI_TYUKAN_K AS CHIKAI,A.T16_HYOKAYOTEI_TYUKAN_K AS HYOKAYOTEI, "
-				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_TYUKAN_K as SOUJI, A.T16_JUNJIKAN_TYUKAN_K as JYUNJI, "
-				
-				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_K as DataKbn,"
-				
-			Case C_SIKEN_KOU_KIM
-				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_Z AS SEI_ZT,A.T16_KEKA_TYUKAN_Z AS KEKA_ZT,A.T16_KEKA_NASI_TYUKAN_Z AS KEKA_NASI_ZT,A.T16_CHIKAI_TYUKAN_Z AS CHIKAI_ZT,A.T16_HYOKAYOTEI_TYUKAN_Z AS HYOKAYOTEI_ZT, "
-				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_Z AS SEI_ZK,A.T16_KEKA_KIMATU_Z AS KEKA_ZK,A.T16_KEKA_NASI_KIMATU_Z AS KEKA_NASI_ZK,A.T16_CHIKAI_KIMATU_Z AS CHIKAI_ZK,A.T16_HYOKAYOTEI_KIMATU_Z AS HYOKAYOTEI_ZK, "
-				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_K AS SEI_KT,A.T16_KEKA_TYUKAN_K AS KEKA_KT,A.T16_KEKA_NASI_TYUKAN_K AS KEKA_NASI_KT,A.T16_CHIKAI_TYUKAN_K AS CHIKAI_KT,A.T16_HYOKAYOTEI_TYUKAN_K AS HYOKAYOTEI_KT, "
-				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_K AS SEI_KK,A.T16_KEKA_KIMATU_K AS KEKA,A.T16_KEKA_NASI_KIMATU_K AS KEKA_NASI,A.T16_CHIKAI_KIMATU_K AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_K AS HYOKAYOTEI, "
-				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_K AS SEI,A.T16_KEKA_KIMATU_K AS KEKA,A.T16_KEKA_NASI_KIMATU_K AS KEKA_NASI,A.T16_CHIKAI_KIMATU_K AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_K AS HYOKAYOTEI, "
-				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_KIMATU_K as SOUJI, A.T16_JUNJIKAN_KIMATU_K as JYUNJI, A.T16_SAITEI_JIKAN, A.T16_KYUSAITEI_JIKAN, "
-				
-				w_sSQL = w_sSQL & "		A.T16_KOUSINBI_TYUKAN_Z,"
-				w_sSQL = w_sSQL & "		A.T16_KOUSINBI_KIMATU_Z,"
-				w_sSQL = w_sSQL & "		A.T16_KOUSINBI_TYUKAN_K,"
-				w_sSQL = w_sSQL & "		A.T16_KOUSINBI_KIMATU_K,"
 
-				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_K as DataKbn,"
-				
-		End Select
+		w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_Z AS SEI_ZT,A.T16_KEKA_TYUKAN_Z AS KEKA_ZT,A.T16_KEKA_NASI_TYUKAN_Z AS KEKA_NASI_ZT,A.T16_CHIKAI_TYUKAN_Z AS CHIKAI_ZT,A.T16_HYOKAYOTEI_TYUKAN_Z AS HYOKAYOTEI_ZT, "
+		w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_Z AS SEI_ZK,A.T16_KEKA_KIMATU_Z AS KEKA_ZK,A.T16_KEKA_NASI_KIMATU_Z AS KEKA_NASI_ZK,A.T16_CHIKAI_KIMATU_Z AS CHIKAI_ZK,A.T16_HYOKAYOTEI_KIMATU_Z AS HYOKAYOTEI_ZK, "
+		w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_K AS SEI_KT,A.T16_KEKA_TYUKAN_K AS KEKA_KT,A.T16_KEKA_NASI_TYUKAN_K AS KEKA_NASI_KT,A.T16_CHIKAI_TYUKAN_K AS CHIKAI_KT,A.T16_HYOKAYOTEI_TYUKAN_K AS HYOKAYOTEI_KT, "
+		w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_K AS SEI_KK,A.T16_KEKA_KIMATU_K AS KEKA,A.T16_KEKA_NASI_KIMATU_K AS KEKA_NASI,A.T16_CHIKAI_KIMATU_K AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_K AS HYOKAYOTEI, "
+		w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_K AS SEI,A.T16_KEKA_KIMATU_K AS KEKA,A.T16_KEKA_NASI_KIMATU_K AS KEKA_NASI,A.T16_CHIKAI_KIMATU_K AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_K AS HYOKAYOTEI, "
+		w_sSQL = w_sSQL & "		A.T16_SOJIKAN_KIMATU_K as SOUJI, A.T16_JUNJIKAN_KIMATU_K as JYUNJI, A.T16_SAITEI_JIKAN, A.T16_KYUSAITEI_JIKAN, "
+		
+		w_sSQL = w_sSQL & "		A.T16_KOUSINBI_TYUKAN_Z,"
+		w_sSQL = w_sSQL & "		A.T16_KOUSINBI_KIMATU_Z,"
+		w_sSQL = w_sSQL & "		A.T16_KOUSINBI_TYUKAN_K,"
+		w_sSQL = w_sSQL & "		A.T16_KOUSINBI_KIMATU_K,"
+		w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_K as DataKbn,"
 		
 		w_sSQL = w_sSQL & " 	A.T16_GAKUSEI_NO AS GAKUSEI_NO,A.T16_GAKUSEKI_NO AS GAKUSEKI_NO,B.T11_SIMEI AS SIMEI "
 		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_SELECT_FLG "
@@ -462,7 +426,7 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & " AND	C.T13_GAKUNEN = " & Cint(m_sGakuNo) & " "
 		w_sSQL = w_sSQL & " AND	C.T13_CLASS = " & Cint(m_sClassNo) & " "
 		w_sSQL = w_sSQL & " AND	A.T16_NENDO = C.T13_NENDO "
-		
+
 		'//置換元の生徒ははずす(C_TIKAN_KAMOKU_MOTO = 1    '置換元)
 		w_sSQL = w_sSQL & " AND	A.T16_OKIKAE_FLG <> " & C_TIKAN_KAMOKU_MOTO
 
@@ -471,8 +435,13 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & "       OR (T16_HISSEN_KBN = " & C_HISSEN_SEN & " AND T16_SELECT_FLG = 1) "
 		w_sSQL = w_sSQL & " 	) "
 
+		w_sSQL = w_sSQL & " AND A.T16_SEI_KIMATU_K < " & C_GOUKAKUTEN & " "
+		w_sSQL = w_sSQL & " AND T16_HYOKA_FUKA_KBN NOT IN(2 , 3) "
+		w_sSQL = w_sSQL & " AND T16_HYOKA_FUKA_KBN NOT IN(" & C_HYOKA_FUKA_KEKKA &  "," & C_HYOKA_FUKA_BOTH & ") "
 		w_sSQL = w_sSQL & " ORDER BY A.T16_GAKUSEKI_NO "
 
+		'  response.write w_sSQL & "<BR>"
+		'  response.end
 		If gf_GetRecordset(m_Rs, w_sSQL) <> 0 Then
 			'ﾚｺｰﾄﾞｾｯﾄの取得失敗
 			f_getdate = 99
@@ -485,98 +454,10 @@ Dim w_iNyuNendo
 		
 		'//ﾚｺｰﾄﾞカウント取得
 		m_rCnt=gf_GetRsCount(m_Rs)
-		
+		' response.write "m_rCnt:" & m_rCnt & "<BR>"
 		f_getdate = 0
 		Exit Do
 	Loop
-
-End Function
-
-'********************************************************************************
-'*	[機能]	特別活動受講学生取得
-'*	[引数]	なし
-'*	[戻値]	なし
-'*	[説明]	
-'********************************************************************************
-Function f_getTUKUclass(p_iNendo,p_sKamokuCd,p_iGakunen,p_iClass)
-
-    Dim w_sSQL
-    Dim w_Rs
-    Dim w_iRet
-	
-    On Error Resume Next
-    Err.Clear
-    
-    f_getTUKUclass = 1
-	p_sTKyokanCd = ""
-	
-	Do
-		
-        '//検索結果の値より一覧を表示
-		w_sSQL = ""
-		w_sSQL = w_sSQL & " SELECT "
-
-		Select Case m_sSikenKBN
-			Case C_SIKEN_ZEN_TYU
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_TYUKAN_Z AS KEKA,A.T34_KEKA_NASI_TYUKAN_Z AS KEKA_NASI,A.T34_CHIKAI_TYUKAN_Z AS CHIKAI, "
-				w_sSQL = w_sSQL & "		A.T34_SOJIKAN_TYUKAN_Z as SOUJI, A.T34_JUNJIKAN_TYUKAN_Z as JYUNJI, "
-			Case C_SIKEN_ZEN_KIM
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_KIMATU_Z AS KEKA,A.T34_KEKA_NASI_KIMATU_Z AS KEKA_NASI,A.T34_CHIKAI_KIMATU_Z AS CHIKAI, "
-				w_sSQL = w_sSQL & "		A.T34_SOJIKAN_KIMATU_Z as SOUJI, A.T34_JUNJIKAN_KIMATU_Z as JYUNJI, "
-			Case C_SIKEN_KOU_TYU
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_TYUKAN_K AS KEKA,A.T34_KEKA_NASI_TYUKAN_K AS KEKA_NASI,A.T34_CHIKAI_TYUKAN_K AS CHIKAI, "
-				w_sSQL = w_sSQL & "		A.T34_SOJIKAN_TYUKAN_K as SOUJI, A.T34_JUNJIKAN_TYUKAN_K as JYUNJI, "
-			Case C_SIKEN_KOU_KIM
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_TYUKAN_Z AS KEKA_ZT,A.T34_KEKA_NASI_TYUKAN_Z AS KEKA_NASI_ZT,A.T34_CHIKAI_TYUKAN_Z AS CHIKAI_ZT, "
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_KIMATU_Z AS KEKA_ZK,A.T34_KEKA_NASI_KIMATU_Z AS KEKA_NASI_ZK,A.T34_CHIKAI_KIMATU_Z AS CHIKAI_ZK, "
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_TYUKAN_K AS KEKA_KT,A.T34_KEKA_NASI_TYUKAN_K AS KEKA_NASI_KT,A.T34_CHIKAI_TYUKAN_K AS CHIKAI_KT, "
-				w_sSQL = w_sSQL & " 	A.T34_KEKA_KIMATU_K AS KEKA,A.T34_KEKA_NASI_KIMATU_K AS KEKA_NASI,A.T34_CHIKAI_KIMATU_K AS CHIKAI, "
-				w_sSQL = w_sSQL & "		A.T34_SOJIKAN_KIMATU_K as SOUJI, A.T34_JUNJIKAN_KIMATU_K as JYUNJI, A.T34_SAITEI_JIKAN, A.T34_KYUSAITEI_JIKAN, "
-		End Select
-
-		w_sSQL = w_sSQL & " 	A.T34_GAKUSEI_NO AS GAKUSEI_NO,A.T34_GAKUSEKI_NO AS GAKUSEKI_NO,B.T11_SIMEI AS SIMEI"
-		w_sSQL = w_sSQL & "     ,0  AS KAISETU "	'//開設時期追加 Ins 2018/03/22 Nishimura
-		w_sSQL = w_sSQL & " FROM "
-		w_sSQL = w_sSQL & " 	T34_RISYU_TOKU A,T11_GAKUSEKI B,T13_GAKU_NEN C "
-		w_sSQL = w_sSQL & " WHERE"
-		w_sSQL = w_sSQL & " 	A.T34_NENDO = " & Cint(p_iNendo) & " "
-		w_sSQL = w_sSQL & " AND	A.T34_TOKUKATU_CD = '" & p_sKamokuCd & "' "
-		w_sSQL = w_sSQL & " AND	A.T34_GAKUSEI_NO = B.T11_GAKUSEI_NO "
-		w_sSQL = w_sSQL & " AND	A.T34_GAKUSEI_NO = C.T13_GAKUSEI_NO "
-		w_sSQL = w_sSQL & " AND	C.T13_GAKUNEN = " & Cint(p_iGakunen) & " "
-		w_sSQL = w_sSQL & " AND	C.T13_CLASS = " & Cint(p_iClass) & " "
-		
-		w_sSQL = w_sSQL & " AND	A.T34_NENDO = C.T13_NENDO "
-		
-		w_sSQL = w_sSQL & " ORDER BY A.T34_GAKUSEKI_NO "
-		
-		'response.write w_sSQL & "<BR>"
-		
-		w_iRet = gf_GetRecordset(m_Rs, w_sSQL)
-		If w_iRet <> 0 Then
-			'ﾚｺｰﾄﾞｾｯﾄの取得失敗
-			f_getTUKUclass = 99
-			m_bErrFlg = True
-			Exit Do 
-		End If
-		
-		'//最初の生徒の学籍番号を取得
-		if not m_Rs.EOF then
-			m_FirstGakusekiNo = m_Rs("GAKUSEKI_NO")
-			m_Rs.movefirst
-		end if
-		
-		m_iSouJyugyou = gf_SetNull2String(m_Rs("SOUJI"))
-		m_iJunJyugyou = gf_SetNull2String(m_Rs("JYUNJI"))
-		
-		'//ﾚｺｰﾄﾞカウント取得
-		m_rCnt=gf_GetRsCount(m_Rs)
-
-		f_getTUKUclass = 0
-		Exit Do
-	Loop
-
-    Call gf_closeObject(w_Rs)
 
 End Function
 
@@ -587,7 +468,7 @@ End Function
 '*	[説明]	
 '********************************************************************************
 Function f_GetTantoKyokan(p_sTKyokanCd)
-
+response.write "f_GetTantoKyokan START" & "<BR>"
     Dim w_sSQL
     Dim w_Rs
     Dim w_iRet
@@ -611,7 +492,8 @@ Function f_GetTantoKyokan(p_sTKyokanCd)
 		w_sSQL = w_sSQL & " AND T20_GAKUNEN = " & Cint(m_sGakuNo) & " "
 		w_sSQL = w_sSQL & " AND T20_CLASS = " & Cint(m_sClassNo) & " "
 		w_sSQL = w_sSQL & " GROUP BY T20_KYOKAN "
-
+response.write "w_sSQL:" & w_sSQL & "<BR>"
+response.end
         iRet = gf_GetRecordset(w_Rs, w_sSQL)
         If iRet <> 0 Then
             'ﾚｺｰﾄﾞｾｯﾄの取得失敗
@@ -640,7 +522,6 @@ End Function
 '*	[説明]	
 '********************************************************************************
 Function f_GetTantoKyokan2(p_sTKyokanCd)
-
     Dim w_sSQL
     Dim w_Rs
     Dim w_iRet
@@ -664,6 +545,7 @@ Function f_GetTantoKyokan2(p_sTKyokanCd)
 		w_sSQL = w_sSQL & " AND T27_GAKUNEN = " & Cint(m_sGakuNo) & " "
 		w_sSQL = w_sSQL & " AND T27_CLASS = " & Cint(m_sClassNo) & " "
 		w_sSQL = w_sSQL & " GROUP BY T27_KYOKAN_CD "
+' response.write "w_sSQL:" & w_sSQL & "<BR>"
 
         iRet = gf_GetRecordset(w_Rs, w_sSQL)
         If iRet <> 0 Then
@@ -701,7 +583,7 @@ Function f_Nyuryokudate()
 	Err.Clear
 
 	f_Nyuryokudate = 1
-	m_bKekkaNyuryokuFlg = False		'欠課入力ﾌﾗｸﾞ
+	'm_bKekkaNyuryokuFlg = False		'欠課入力ﾌﾗｸﾞ
 
 	Do
 
@@ -721,10 +603,11 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_NENDO = T24_SIKEN_NITTEI.T24_NENDO"
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_DAIBUNRUI_CD=" & cint(C_SIKEN)
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_NENDO=" & Cint(m_iNendo)
-		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & Cint(m_sSikenKBN)
+		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & C_SIKEN_SAISI
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_CD='0'"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_GAKUNEN=" & Cint(m_sGakuNo)
-		
+' response.write w_sSQL  & "<BR>"
+'rensponse.end		
 		w_iRet = gf_GetRecordset(m_DRs, w_sSQL)
 		If w_iRet <> 0 Then
 			'ﾚｺｰﾄﾞｾｯﾄの取得失敗
@@ -748,11 +631,11 @@ Function f_Nyuryokudate()
 		If gf_YYYY_MM_DD(m_iNKaishi,"/") <= gf_YYYY_MM_DD(w_sSysDate,"/") And gf_YYYY_MM_DD(m_iNSyuryo,"/") >= gf_YYYY_MM_DD(w_sSysDate,"/") Then
 			f_Nyuryokudate = 0
 		End If
-		
-		'欠課入力可能ﾌﾗｸﾞ
-		If gf_YYYY_MM_DD(m_iKekkaKaishi,"/") <= gf_YYYY_MM_DD(w_sSysDate,"/") And gf_YYYY_MM_DD(m_iKekkaSyuryo,"/") >= gf_YYYY_MM_DD(w_sSysDate,"/") Then
-			m_bKekkaNyuryokuFlg = True
-		End If
+' response.write "m_iNKaishi:" & m_iNKaishi  & "<BR>"
+' response.write "w_sSysDate:" & w_sSysDate  & "<BR>"
+' response.write "m_iNSyuryo:" & m_iNSyuryo  & "<BR>"
+' response.write "w_sSysDate:" & w_sSysDate  & "<BR>"		
+' response.write "f_Nyuryokudate:" & f_Nyuryokudate  & "<BR>"
 		
 		Exit Do
 	Loop
@@ -761,7 +644,7 @@ End Function
 
 
 '********************************************************************************
-'*	[機能]	データの取得
+'*	[機能]	科目が特別活動であるかを検索
 '*	[引数]	なし
 '*	[戻値]	なし
 '*	[説明]	
@@ -797,7 +680,7 @@ Function f_getTUKU(p_iNendo,p_sKamoku,p_iGakunen,p_iClass,p_TUKU_FLG)
 			m_bErrFlg = True
 			Exit Do 
 		End If
-
+'response.write w_sSQL  & "<BR>"
 		If w_Rs.EOF = false Then
 			p_TUKU_FLG = cStr(gf_SetNull2Zero(w_Rs("T20_TUKU_FLG")))
 		End If
@@ -1066,17 +949,14 @@ Sub showPage()
     function window_onload() {
 		//スクロール同期制御
 		parent.init();
-		
-		//成績合計値の取得
-		f_GetTotalAvg();
-		
+			
 		// 総時間と純時間をhiddenにセット
 		document.frm.hidSouJyugyou.value = "<%= m_iSouJyugyou %>";
 		document.frm.hidJunJyugyou.value = "<%= m_iJunJyugyou %>";
 		
         //submit
         document.frm.target = "topFrame";
-        document.frm.action = "sei0100_middle.asp"
+        document.frm.action = "sei0800_middle.asp"
         document.frm.submit();
         
         return;
@@ -1135,30 +1015,31 @@ Sub showPage()
     //************************************************************
     function f_Touroku(){
 		var ob,w_num;
+		var i;
+		var w_Seiseki;
+		var w_hidSeiseki;
+		var indx;
+		var w_bFLG;
+		var SeisekiArray =[];
+			
+		if (!confirm("<%=C_TOUROKU_KAKUNIN%>")) { return;}
+		//ヘッダ部空白表示
+		parent.topFrame.document.location.href="white.asp";
 		
-		if(f_CheckData_All() == 1){
-	            alert("入力値が不正です");
-	            return 1;
-		}else{
-			if (!confirm("<%=C_TOUROKU_KAKUNIN%>")) { return;}
-			
-			document.frm.hidSouJyugyou.value = parent.topFrame.document.frm.txtSouJyugyou.value;
-			document.frm.hidJunJyugyou.value = parent.topFrame.document.frm.txtJunJyugyou.value;
-			
-			//ヘッダ部空白表示
-			parent.topFrame.document.location.href="white.asp";
-			
-			//登録処理
-		<% if m_TUKU_FLG = C_TUKU_FLG_TUJO then %>
-			document.frm.hidUpdMode.value = "TUJO";
-			document.frm.action="sei0100_upd.asp";
-		<% Else %>
-			document.frm.hidUpdMode.value = "TOKU";
-			document.frm.action="sei0100_upd_toku.asp";
-		<% End if %>
-	        document.frm.target="main";
-	        document.frm.submit();
+		//登録処理
+	
+		for (i = 0; i < document.frm.i_Max.value; i++) {
+			w_Seiseki = eval("document.frm.Seiseki"+(i+1));
+			indx = w_Seiseki.selectedIndex;
+			m_SeisekiIndex =  w_Seiseki.options[indx].value;
+			SeisekiArray[i] =  w_Seiseki.options[indx].value;
 		}
+		document.frm.hidSeiseki.value = SeisekiArray;
+		document.frm.hidUpdMode.value = "TUJO";
+		document.frm.action="sei0800_upd.asp";
+		document.frm.target="main";
+		document.frm.submit();
+	
 	}
 
 	//************************************************************
@@ -1173,301 +1054,7 @@ Sub showPage()
 
 	}
 
-    //************************************************************
-    //  [機能]  入力値のﾁｪｯｸ(登録ボタン押下時)
-    //  [引数]  なし
-    //  [戻値]  0:ﾁｪｯｸOK、1:ﾁｪｯｸｴﾗｰ
-    //  [説明]  入力値のNULLﾁｪｯｸ、英数字ﾁｪｯｸ、桁数ﾁｪｯｸを行う
-    //          引渡ﾃﾞｰﾀ用にﾃﾞｰﾀを加工する必要がある場合には加工を行う
-    //************************************************************
-    function f_CheckData_All() {
-		var i
-		var w_Seiseki
-		var w_bFLG
 
-		// 総時間・純時間入力チェック
-		if(!f_CheckNum("parent.topFrame.document.frm.txtSouJyugyou")){ return 1; }
-		if(!f_CheckNum("parent.topFrame.document.frm.txtJunJyugyou")){ return 1; }
-		if(!f_CheckDaisyou()){ return 1; }
-
-	<% if m_TUKU_FLG = C_TUKU_FLG_TUJO then %>
-		for (i = 1; i < document.frm.i_Max.value; i++) {
-			
-			w_Seiseki = eval("document.frm.Seiseki"+i);
-			w_bFLG = true
-
-			if (w_Seiseki){		//2001/12/17 Add
-				if (isNaN(w_Seiseki.value)){
-					w_bFLG = false;
-					w_Seiseki.focus();
-					return 1;
-					break;
-				}else{
-					//上限値をチェック 2001/12/09 追加 伊藤
-					//var wStr = new String(w_Seiseki.value)
-					if (w_Seiseki.value > 100){
-						w_bFLG = false;
-						w_Seiseki.focus();
-						return 1;
-						break;
-					};
-
-					//マイナスをチェック
-					var wStr = new String(w_Seiseki.value)
-					if (wStr.match("-")!=null){
-						w_bFLG = false;
-						w_Seiseki.focus();
-						return 1;
-						break;
-					};
-
-					//小数点チェック
-					w_decimal = new Array();
-					w_decimal = wStr.split(".")
-					if(w_decimal.length>1){
-						w_bFLG = false;
-						w_Seiseki.focus();
-						return 1;
-						break;
-					};
-				};
-			};
-		};
-		if (w_bFLG == false){
-			return 1;
-		};
-	<% End if %>
-
-		var i
-		for (i = 1; i < document.frm.i_Max.value; i++) {
-			w_Chikai = eval("document.frm.Chikai"+i);
-			w_bFLG = true
-if (w_Chikai){		//2001/12/17 Add
-			if (isNaN(w_Chikai.value)){
-				w_bFLG = false;
-				w_Chikai.focus();
-				return 1;
-				break;
-			}else{
-
-				//マイナスをチェック
-				var wStr = new String(w_Chikai.value)
-				if (wStr.match("-")!=null){
-					w_bFLG = false;
-					w_Chikai.focus();
-					return 1;
-					break;
-				};
-
-				//小数点チェック
-				w_decimal = new Array();
-				w_decimal = wStr.split(".")
-				if(w_decimal.length>1){
-					w_bFLG = false;
-					w_Chikai.focus();
-					return 1;
-					break;
-				}
-
-			};
-};
-		};
-
-			if (w_bFLG == false){
-				return 1;
-			};
-
-		var i
-		for (i = 1; i < document.frm.i_Max.value; i++) {
-
-			w_Kekka = eval("document.frm.Kekka"+i);
-			w_bFLG = true
-if (w_Kekka){		//2001/12/17 Add
-			if (isNaN(w_Kekka.value)){
-				w_bFLG = false;
-				w_Kekka.focus();
-				return 1;
-				break;
-			}else{
-
-				//マイナスをチェック
-				var wStr = new String(w_Kekka.value)
-				if (wStr.match("-")!=null){
-					w_bFLG = false;
-					w_Kekka.focus();
-					return 1;
-					break;
-				};
-
-				//小数点チェック
-				w_decimal = new Array();
-				w_decimal = wStr.split(".")
-				if(w_decimal.length>1){
-					w_bFLG = false;
-					w_Kekka.focus();
-					return 1;
-					break;
-				}
-
-			};
-};
-		};
-			if (w_bFLG == false){
-				return 1;
-			};
-
-		var i
-		for (i = 1; i < document.frm.i_Max.value; i++) {
-			w_KekkaGai = eval("document.frm.KekkaGai"+i);
-			w_bFLG = true
-if (w_KekkaGai){		//2001/12/17 Add
-			if (isNaN(w_KekkaGai.value)){
-				w_bFLG = false;
-				w_KekkaGai.focus();
-				return 1;
-				break;
-			}else{
-
-				//マイナスをチェック
-				var wStr = new String(w_KekkaGai.value)
-				if (wStr.match("-")!=null){
-					w_bFLG = false;
-					w_KekkaGai.focus();
-					return 1;
-					break;
-				};
-
-				//小数点チェック
-				w_decimal = new Array();
-				w_decimal = wStr.split(".")
-				if(w_decimal.length>1){
-					w_bFLG = false;
-					w_KekkaGai.focus();
-					return 1;
-					break;
-				}
-
-			};
-};
-		};
-			if (w_bFLG == false){
-				return 1;
-			};
-
-		return 0;
-	};
-
-    //************************************************************
-    //  [機能]  簡易数値型チェック
-    //************************************************************
-	function f_CheckNum(pFromName){
-
-		wFromName = eval(pFromName);
-		if (isNaN(wFromName.value)){
-			wFromName.focus();
-			return false;
-		}else{
-
-			//マイナスをチェック
-			var wStr = new String(wFromName.value)
-			if (wStr.match("-")!=null){
-				wFromName.focus();
-				return false;
-			};
-
-			//小数点チェック
-			w_decimal = new Array();
-			w_decimal = wStr.split(".")
-			if(w_decimal.length>1){
-				wFromName.focus();
-				return false;
-			};
-		}
-		return true;
-	}
-
-    //************************************************************
-    //  [機能]  大小チェック
-    //************************************************************
-	function f_CheckDaisyou(){
-
-		wObj1 = eval("parent.topFrame.document.frm.txtSouJyugyou");
-		wObj2 = eval("parent.topFrame.document.frm.txtJunJyugyou");
-
-		if(wObj1.value != "" && wObj2.value != ""){
-			if(wObj1.value-0 < wObj2.value-0){
-				wObj1.focus();
-				return false;
-			}
-		}
-		return true;
-	}
-
-	//************************************************
-	//Enter キーで下の入力フォームに動くようになる
-	//引数：p_inpNm	対象入力フォーム名
-	//    ：p_frm	対象フォーム
-	//　　：i		現在の番号
-	//戻値：なし
-	//入力フォーム名が、xxxx1,xxxx2,xxxx3,…,xxxxn 
-	//の名前のときに利用できます。
-	//************************************************
-	function f_MoveCur(p_inpNm,p_frm,i){
-		if (event.keyCode == 13){		//押されたキーがEnter(13)の時に動く。
-			i++;
-
-			//入力可能のテキストボックスを探す。見つかったらフォーカスを移して処理を抜ける。
-	        for (w_li = 1; w_li <= 99; w_li++) {
-				
-				if (i > <%=m_rCnt%>) i = 1; //iが最大値を超えると、はじめに戻る。
-				inpForm = eval("p_frm."+p_inpNm+i);
-
-				//入力可能領域ならフォーカスを移す。
-				if (typeof(inpForm) != "undefined") {
-					inpForm.focus();			//フォーカスを移す。
-					inpForm.select();			//移ったテキストボックス内を選択状態にする。
-					break;
-
-				//入力付加なら次の項目へ
-				} else{
-					i++
-				}
-	        }
-		}else{
-	//		alert(event.keyCode);
-			return false;
-		}
-		return true;
-	}
-	
-	
-	//************************************************
-	//評価不能がクリックされたときの処理
-	//************************************************
-	function f_InpDisabled(p_num){
-		var ob = new Array();
-		
-		ob[0] = eval("document.frm.chkHyokaFuno" + p_num);
-		ob[1] = eval("document.frm.Seiseki" + p_num);
-		//ob[2] = eval("document.frm.button" + p_num);
-		//ob[3] = eval("document.frm.Hyoka" + p_num);
-		
-		if(ob[0].checked){
-			ob[1].value = "";
-			ob[1].disabled = true;
-			
-			//ob[2].value = "・";
-			//ob[2].disabled = true;
-			//ob[3].value = "";
-		}else{
-			ob[1].disabled = false;
-			//ob[2].disabled = false;
-		}
-		
-		f_GetTotalAvg();
-		
-	}
-	
 	//-->
 	</SCRIPT>
 	</head>
@@ -1747,11 +1334,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
 				<%Else%>
 
 					<input type="hidden" name="txtGseiNo<%=i%>" value="<%=m_Rs("GAKUSEI_NO")%>">
@@ -1813,11 +1395,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 						w_sInputClass1 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'"
 					End if
 					
-					'// 欠課入力可能ﾌﾗｸﾞ
-					if Not m_bKekkaNyuryokuFlg then
-						w_sInputClass2 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'"
-					End if
-					
 					'=========================================================================
 					'//通常授業の場合 
 					'=========================================================================
@@ -1826,9 +1403,10 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
 							
 						<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
-							<input type="text" <%=w_sInputClass1%> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
-						</td>
-						
+							<select name="Seiseki<%=i%>" style='width:50px;' onchange="">
+								<option value="1">合</option>
+								<option value="2" selected="">否</option>
+							</select>
 						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
 								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>>
 									<input type="button" size="2" name="button<%=i%>" value="<%=w_sHyoka%>" onClick="return f_change(<%=i%>)" class="<%=w_cell%>" style="text-align:center">
@@ -1838,12 +1416,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 								<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>><%=w_sHyoka%></td>
 								<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
 						<%End If%>
-							
-							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
-							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
-							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
-							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
-							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
 					<%Else%>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
@@ -1857,7 +1429,10 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
 							
 						<td class="<%=w_cell%>" width="50" align="right" nowrap <%=w_Padding%>>
-							<input type="text" <%= w_sInputClass1 %> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
+							<select name="Seiseki<%=i%>" style='width:50px;' onchange="">
+									<option value="1">合</option>
+									<option value="2" selected="">否</option>
+							</select>
 						</td>
 						
 						<%	'表示のみの場合の合計・平均値を求める
@@ -1873,17 +1448,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<%Else%>
 								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
 						<%End If%>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
 					<%Else%>
-						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
-						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
-						<td class="<%=w_cell%>" width="100" align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
-						<td class="<%=w_cell%>" width="80"  align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
-						<td class="<%=w_cell%>" width="85"  align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 					<%End If%>
 				<%End If%>
 			<%End If%>
@@ -1907,21 +1472,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 				i = i + 1
 			Loop
 			%>
-			<tr>
-				<td class="header" nowrap align="right" colspan="7">
-					<FONT COLOR="#FFFFFF"><B>成績合計</B></FONT>
-					<input type="text" name="txtTotal" size="5" <%=w_sInputClass%> readonly>
-				</td>
-				<td class="header" nowrap align="center" colspan="6">&nbsp;</td>
-			</tr>
-			
-			<tr>
-				<td class="header" nowrap align="right" colspan="7">
-					<FONT COLOR="#FFFFFF"><B>　平均点</B></FONT>
-					<input type="text" name="txtAvg" size="5" <%=w_sInputClass%> readonly>
-				</td>
-				<td class="header" nowrap align="center" colspan="6">&nbsp;</td>
-			</tr>
 		</table>
 		
 		</td>
@@ -1932,7 +1482,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 		<table>
 			<tr>
 				<td align="center" align="center" colspan="13">
-					<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%>
+					<%If m_iKikan <> "NO" Then%>
 						<input type="button" class="button" value="　登　録　" onclick="javascript:f_Touroku()">　
 					<%End If%>
 						<input type="button" class="button" value="キャンセル" onclick="javascript:f_Cansel()">
@@ -1946,7 +1496,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 	<input type="hidden" name="txtNendo"    value="<%=m_iNendo%>">
 	<input type="hidden" name="txtKyokanCd" value="<%=m_sKyokanCd%>">
 	<input type="hidden" name="KamokuCd"    value="<%=m_sKamokuCd%>">
-	<input type="hidden" name="i_Max"       value="<%=i%>">
+	<input type="hidden" name="i_Max"       value="<%=i-1%>">
 	<input type="hidden" name="txtSikenKBN" value="<%=m_sSikenKBN%>">
 	<input type="hidden" name="txtGakuNo"   value="<%=m_sGakuNo%>">
 	<input type="hidden" name="txtGakkaCd"  value="<%=m_sGakkaCd%>">
@@ -1963,65 +1513,13 @@ if (w_KekkaGai){		//2001/12/17 Add
 	<input type="hidden" name="hidFirstGakusekiNo" value="<%=m_FirstGakusekiNo%>">
 	<input type="hidden" name="hidMihyoka" value ="<%=w_DataKbn%>">
 	<input type="hidden" name="hidSchoolFlg" value ="<%=m_SchoolFlg%>">
-	
+	<input type="hidden" name="hidSeiseki" value="">
 	
 	</FORM>
 	</center>
 	</body>
 	<SCRIPT>
 	<!--
-		//2002/02/05 佐野 追加
-		//************************************************************
-		//	[機能]	成績が変更されたとき
-		//	[引数]	なし
-		//	[戻値]	なし
-		//	[説明]	成績の合計と平均を求める
-		//	[備考]	学生の総数が分かるのは最後であるため、この位置に書く。
-		//************************************************************
-		function f_GetTotalAvg(){
-			var i;
-			var total;
-			var avg;
-			var cnt;
-			
-			total = 0;
-			cnt = 0;
-			avg = 0;
-			
-			<%If m_iKikan <> "NO" Then	'入力期間中%>
-				//学生数でのループ
-				for(i=0;i<<%=i%>;i++) {
-					//存在するかどうか
-					textbox = eval("document.frm.Seiseki" + (i+1));
-					if (textbox) {
-						//未入力チェック
-						if (textbox.value != "") {
-							//数字でないのは無視する
-							if (!isNaN(textbox.value)) {
-								total = total + parseInt(textbox.value);
-							}
-						}
-						cnt = cnt + 1;
-					}
-				}
-			
-			<% Else	'入力期間中ではない%>
-				total = <%=w_lSeiTotal%>;
-				cnt   = <%=w_lGakTotal%>;
-			<% End If%>
-			
-			document.frm.txtTotal.value=total;
-			
-			//四捨五入
-			if (cnt!=0){
-				avg = total/cnt;
-				avg = avg * 10;
-				avg = Math.round(avg);
-				avg = avg / 10;
-			}
-			
-			document.frm.txtAvg.value=avg;
-		}
 	//-->
 	</SCRIPT>
 

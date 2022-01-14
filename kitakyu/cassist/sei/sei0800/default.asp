@@ -98,13 +98,13 @@ Sub showPage()
 
 <head>
 <!--#include file="../../Common/scroll.js"-->
-<title>¬Ñ“o˜^</title>
+<title>ÄŽŽŒ±¬Ñ“o˜^</title>
 </head>
 
 <!--<frameset rows=160,1,* frameborder="0" framespacing="0">-->
 <frameset rows=245px,1,* frameborder="0" framespacing="0">
-	<!--<frame src="sei0100_top.asp" scrolling="auto"  name="top" noresize>-->
-	<frame src="sei0100_top.asp" scrolling="yes"  name="topFrame" noresize>
+	<!--<frame src="sei0800_top.asp" scrolling="auto"  name="top" noresize>-->
+	<frame src="sei0800_top.asp" scrolling="yes"  name="topFrame" noresize>
     <frame src="../../common/bar.html" scrolling="auto" noresize name="bar">
 	<frame src="default2.asp" scrolling="yes"  name="main" noresize>
 </frameset>

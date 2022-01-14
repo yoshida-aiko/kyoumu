@@ -2,9 +2,9 @@
 <%
 '/************************************************************************
 ' システム名: 教務事務システム
-' 処  理  名: 成績登録
-' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0100/sei0100_top.asp
-' 機      能: 上ページ 成績登録の検索を行う
+' 処  理  名: 再試験成績登録
+' ﾌﾟﾛｸﾞﾗﾑID : sei/sei0800/sei0800_top.asp
+' 機      能: 上ページ 再試験成績登録の検索を行う
 '-------------------------------------------------------------------------
 ' 引      数:教官コード     ＞      SESSIONより（保留）
 '           :年度           ＞      SESSIONより（保留）
@@ -17,14 +17,8 @@
 '           ■表示ボタンクリック時
 '               下のフレームに指定した条件にかなう調査書の内容を表示させる
 '-------------------------------------------------------------------------
-' 作      成: 2001/07/26 前田 智史
-' 変      更: 2001/08/09 根本 直美     NN対応に伴うソース変更
-' 変      更: 2001/08/16 伊藤 公子     コンボ表示を変更
-' 変      更: 2017/12/22 西村          後期期末・科目取得SQLよりM05.GAKKACDのリンクを削除
-' 変      更: 2017/12/26 西村          科目名の継承を科目CDと同様に追加(1クラス複数学科対応のため)
-' 変      更: 2017/12/27 清本          後期期末の科目の並び順を追加
-' 変      更: 2018/08/06 清本          クラス学科以外の学科(旧学科)はクラス学科のコースでコースを限定しない
-' 変      更: 2019/02/12 清本          後期期末試験時もクラス学科以外の学科(旧学科)はクラス学科のコースでコースを限定しない
+' 作      成: 2021/12/23 吉田　成績登録画面を流用し作成
+' 変      更: 
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -68,7 +62,7 @@ Sub Main()
 
     'Message用の変数の初期化
     w_sWinTitle="キャンパスアシスト"
-    w_sMsgTitle="成績登録"
+    w_sMsgTitle="再試験成績登録"
     w_sMsg=""
     w_sRetURL="../../login/default.asp"     
     w_sTarget="_top"
@@ -94,50 +88,14 @@ Sub Main()
         '// 不正アクセスチェック
         Call gf_userChk(session("PRJ_No"))
 
-		'=====================
-		'//試験コンボを取得
-		'=====================
-        w_iRet = f_GetSiken()
-        If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
+		' 学年末試験の試験区分を取得
+		m_iSikenKbn =  C_SIKEN_KOU_KIM
+		w_iRet = f_GetKamoku_Nenmatu()
+		If w_iRet <> 0 Then m_bErrFlg = True : Exit Do	
 
-		'==============================================
-		'//試験区分をｾｯﾄする(科目取得時に使用)
-		'==============================================
-		If Request("txtSikenKBN")  = "" Then
-
-			'//最近の試験区分を取得
-            w_iRet = gf_Get_SikenKbn(m_iSikenKbn,C_SEISEKI_KIKAN,0)
-            If w_iRet <> 0 Then
-                m_bErrFlg = True
-                Exit Do
-            End If
-
-		Else
-		    m_iSikenKbn = Request("txtSikenKBN")    '//コンボ試験区分
-		End If
-
-		If m_iSikenKbn <> "" Then
-			'//後期期末試験が選択された場合
-			If cint(m_iSikenKbn) = cint(C_SIKEN_KOU_KIM) Then
-
-				'//後期期末試験が選択された場合、科目の最終実施試験を全て取得する
-				'//学年・クラス・科目コンボを取得
-		        w_iRet = f_GetKamoku_Nenmatu()
-		        If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
-
-			Else
-				'//学年・クラス・科目コンボを取得
-		        w_iRet = f_GetKamoku()
-		        If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
-
-
-			End If
-
-			'//留学生の代替科目取得　2001/12/20 add
+		'//留学生の代替科目取得　2001/12/20 add
 	        w_iRet = f_GetRyuDaigae(m_iSikenKbn)
 	        If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
-
-		End If
 
        '// ページを表示
        Call showPage()
@@ -199,6 +157,7 @@ Function f_GetSiken()
 		w_sSQL = w_sSQL & vbCrLf & "    AND M01_SYOBUNRUI_CD < " & cint(C_SIKEN_JITURYOKU)
 		w_sSQL = w_sSQL & vbCrLf & "  ORDER BY M01_SYOBUNRUI_CD"
 
+response.write "w_sSQL:" & w_sSQL & "<BR>"
         iRet = gf_GetRecordset(m_Rs_Siken, w_sSQL)
         If iRet <> 0 Then
             'ﾚｺｰﾄﾞｾｯﾄの取得失敗
@@ -208,254 +167,6 @@ Function f_GetSiken()
         End If
 
         f_GetSiken = 0
-        Exit Do
-    Loop
-
-End Function
-
-'********************************************************************************
-'*  [機能]  学年・クラス・科目コンボを取得
-'*  [引数]  なし
-'*  [戻値]  なし
-'*  [説明]  
-'********************************************************************************
-Function f_GetKamoku()
-
-    Dim w_sSQL
-    Dim w_iCnt	'試験時間割から取得できるレコード数
-
-    On Error Resume Next
-    Err.Clear
-    
-    f_GetKamoku = 1
-	w_iCnt = 0
-
-    Do 
-
-		'試験時間割から取得できるレコード数を取得
-		'call f_SikenJWariCnt(w_iCnt)
-
-
-		'if w_iCnt = 0 then 
-		'試験時間割からレコードセットが取れなかった場合は、担当教官Tからコンボ作成
-
-			m_sGetTable = "T27"
-			Select Case cint(m_iSikenKbn) '選んだ試験によって、取得科目の開設期間を変える
-				Case C_SIKEN_ZEN_TYU
-					w_sJiki = C_KAI_ZENKI
-				Case C_SIKEN_ZEN_KIM
-					w_sJiki = C_KAI_ZENKI
-				Case C_SIKEN_KOU_TYU
-					w_sJiki = C_KAI_KOUKI
-				Case C_SIKEN_KOU_KIM
-					w_sJiki = C_KAI_KOUKI
-			End Select
-
-			w_sSQL = ""
-
-			w_sSQL = w_sSQL & vbCrLf & "  SELECT DISTINCT "
-			w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " ,CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " ,KAMOKU"
-			w_sSQL = w_sSQL & vbCrLf & " ,CLASSMEI"
-			w_sSQL = w_sSQL & vbCrLf & " ,GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & " ,KAMOKUMEI"
-			w_sSQL = w_sSQL & vbCrLf & " FROM ("
-
-			
-'			w_sSQL = w_sSQL & vbCrLf & "  SELECT DISTINCT "
-'			w_sSQL = w_sSQL & vbCrLf & " T27_GAKUNEN AS GAKUNEN"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_CLASS AS CLASS"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_KAMOKU_CD AS KAMOKU"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI AS CLASSMEI"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD AS GAKKA_CD"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI AS KAMOKUMEI"
-'			w_sSQL = w_sSQL & vbCrLf & "  FROM"
-'			w_sSQL = w_sSQL & vbCrLf & "  T27_TANTO_KYOKAN"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T15_RISYU"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASS"
-'			w_sSQL = w_sSQL & vbCrLf & "  WHERE T27_NENDO = M05_NENDO(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = M05_GAKUNEN(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_CLASS = M05_CLASSNO(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T15_KAMOKU_CD(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND M05_GAKKA_CD = T15_GAKKA_CD"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T15_NYUNENDO(+) = T27_NENDO - T27_GAKUNEN + 1"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_NENDO = " & m_iNendo
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KYOKAN_CD ='" & m_sKyokanCd & "' "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_SEISEKI_INP_FLG =" & C_SEISEKI_INP_FLG_YES & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND ( ("
-'			w_sSQL = w_sSQL & vbCrLf & "       T15_KAISETU1 =" & w_sJiki & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU2 =" & w_sJiki & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU3 =" & w_sJiki & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU4 =" & w_sJiki & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU5 =" & w_sJiki & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    )"
-'			w_sSQL = w_sSQL & vbCrLf & "    OR ("
-'			w_sSQL = w_sSQL & vbCrLf & "       T15_KAISETU1 =" & C_KAI_TUNEN & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU2 =" & C_KAI_TUNEN & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU3 =" & C_KAI_TUNEN & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU4 =" & C_KAI_TUNEN & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU5 =" & C_KAI_TUNEN & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    ) )"
-'			w_sSQL = w_sSQL & vbCrLf & "  GROUP BY "
-'			w_sSQL = w_sSQL & vbCrLf & "  T27_NENDO"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_GAKUNEN"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_CLASS"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_KAMOKU_CD"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD"
-'			
-'			
-'			w_sSQL = w_sSQL & vbCrLf & "  UNION ALL "
-			
-			w_sSQL = w_sSQL & vbCrLf & " SELECT DISTINCT "
-			w_sSQL = w_sSQL & vbCrLf & " 	T27_GAKUNEN AS GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_CLASS AS CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_KAMOKU_CD AS KAMOKU"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASSMEI AS CLASSMEI"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD AS GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T16_KAMOKUMEI AS KAMOKUMEI"
-			w_sSQL = w_sSQL & vbCrLf & " FROM"
-			w_sSQL = w_sSQL & vbCrLf & " 	T27_TANTO_KYOKAN "
-			w_sSQL = w_sSQL & vbCrLf & " 	,T16_RISYU_KOJIN "
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASS "
-			w_sSQL = w_sSQL & vbCrLf & " WHERE "
-			w_sSQL = w_sSQL & vbCrLf & " 		T27_NENDO = M05_NENDO "
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = M05_GAKUNEN "
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_CLASS = M05_CLASSNO	"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T16_KAMOKU_CD(+)"
-
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T16_KAMOKU_CD"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = T16_HAITOGAKUNEN "
-			w_sSQL = w_sSQL & vbCrLf & "    AND (T16_KAISETU =" & w_sJiki & " "
-			w_sSQL = w_sSQL & vbCrLf & "    OR   T16_KAISETU =" & C_KAI_TUNEN & ") "
-
-''2014/10/17 DEL 浦川	w_sSQL = w_sSQL & vbCrLf & "    AND M05_GAKKA_CD(+) = T16_GAKKA_CD "
-
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T16_NENDO(+) = T27_NENDO "
-
-			w_sSQL = w_sSQL & vbCrLf & "    AND T16_NENDO = T27_NENDO "
-
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_NENDO = " & m_iNendo
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KYOKAN_CD ='" & m_sKyokanCd & "' "
-			w_sSQL = w_sSQL & vbCrLf & "    AND T27_SEISEKI_INP_FLG =" & C_SEISEKI_INP_FLG_YES & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T16_OKIKAE_FLG >= " & C_TIKAN_KAMOKU_SAKI 
-
-			w_sSQL = w_sSQL & vbCrLf & "    AND (T16_OKIKAE_FLG > " & C_TIKAN_KAMOKU_SAKI 
-			w_sSQL = w_sSQL & vbCrLf & "    OR  T16_OKIKAE_FLG = 0) "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T16_COURSE_CD IN ( '0' , CASE WHEN M05_COURSE_CD IS NOT NULL THEN M05_COURSE_CD ELSE T16_COURSE_CD END) " '2017.06.20 Ins Kiyomoto	'2018.08.06 Del Kiyomoto
-			w_sSQL = w_sSQL & vbCrLf & "    AND T16_COURSE_CD IN ( '0' , CASE WHEN M05_GAKKA_CD = T16_GAKKA_CD THEN (CASE WHEN M05_COURSE_CD IS NOT NULL THEN M05_COURSE_CD ELSE T16_COURSE_CD END ) ELSE T16_COURSE_CD END ) " '2018.08.06 Ins Kiyomoto
-			w_sSQL = w_sSQL & vbCrLf & "  GROUP BY "
-			w_sSQL = w_sSQL & vbCrLf & " 	T27_NENDO"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_KAMOKU_CD"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASSMEI"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T16_KAMOKUMEI"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD"
-			
-			
-		'Else 
-				'試験時間割からレコードセットが取れるのならば、こちらからコンボ作成
-			m_sGetTable = "T27"
-
-			w_sSQL = w_sSQL & vbCrLf & "  UNION ALL "
-
-			w_sSQL = w_sSQL & vbCrLf & "  SELECT"
-			w_sSQL = w_sSQL & vbCrLf & " T26_GAKUNEN AS GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " ,T26_CLASS AS CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " ,T26_KAMOKU AS KAMOKU"
-			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI AS CLASSMEI"
-			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD AS GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI AS KAMOKUMEI"
-			w_sSQL = w_sSQL & vbCrLf & "  FROM"
-			w_sSQL = w_sSQL & vbCrLf & "  T26_SIKEN_JIKANWARI"
-			w_sSQL = w_sSQL & vbCrLf & " ,T15_RISYU"
-			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASS"
-			w_sSQL = w_sSQL & vbCrLf & "  WHERE T26_NENDO = M05_NENDO(+)"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_GAKUNEN = M05_GAKUNEN(+)"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_CLASS = M05_CLASSNO(+)"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_KAMOKU = T15_KAMOKU_CD(+)"
-'2014/10/17 DEL 浦川	w_sSQL = w_sSQL & vbCrLf & "    AND M05_GAKKA_CD = T15_GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T15_NYUNENDO(+) = T26_NENDO - T26_GAKUNEN + 1"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_NENDO = " & m_iNendo
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_SIKEN_KBN =" & m_iSikenKbn
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_SIKEN_CD ='" & C_SIKEN_CODE_NULL & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    AND ("
-			w_sSQL = w_sSQL & vbCrLf & "       T26_JISSI_KYOKAN    ='" & m_sKyokanCd & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    OR T26_SEISEKI_KYOKAN1 ='" & m_sKyokanCd & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    OR T26_SEISEKI_KYOKAN2 ='" & m_sKyokanCd & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    OR T26_SEISEKI_KYOKAN3 ='" & m_sKyokanCd & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    OR T26_SEISEKI_KYOKAN4 ='" & m_sKyokanCd & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    OR T26_SEISEKI_KYOKAN5 ='" & m_sKyokanCd & "'"
-			w_sSQL = w_sSQL & vbCrLf & "    )"
-			w_sSQL = w_sSQL & vbCrLf & "    AND T26_JISSI_FLG = " & Cint(C_SIKEN_KBN_JISSI)
-			w_sSQL = w_sSQL & vbCrLf & "  GROUP BY "
-			w_sSQL = w_sSQL & vbCrLf & "  T26_NENDO"
-			w_sSQL = w_sSQL & vbCrLf & " ,T26_GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " ,T26_CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " ,T26_KAMOKU"
-			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI"
-			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI"
-			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD"
-			
-		
-		'---特別活動を取得
-		w_sSQL = w_sSQL & vbCrLf & " UNION ALL "
-
-		w_sSQL = w_sSQL & vbCrLf & " SELECT  DISTINCT "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_GAKUNEN AS GAKUNEN, "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS AS CLASS, "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_KAMOKU AS KAMOKU, "
-		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_CLASSMEI AS CLASSMEI, "
-		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_GAKKA_CD AS GAKKA_CD, "
-		w_sSQL = w_sSQL & vbCrLf & "  M41_TOKUKATU.M41_MEISYO AS KAMOKUMEI "
-		w_sSQL = w_sSQL & vbCrLf & " FROM "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI ,M05_CLASS,M41_TOKUKATU"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS = M05_CLASS.M05_CLASSNO "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKUNEN = M05_CLASS.M05_GAKUNEN"
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M05_CLASS.M05_NENDO "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KAMOKU = M41_TOKUKATU.M41_TOKUKATU_CD "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M41_TOKUKATU.M41_NENDO "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO=" & m_iNendo & " "
-
-'2015/10/08 学期をシステム年から取得した日付で取得した学期を使用しているため、後期になった時に前期の時間割を参照できなくなっている。
-'		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKKI_KBN='" & m_iGakki & "' "
-if m_iSikenKbn = 1 or m_iSikenKbn = 2 then
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKKI_KBN='1' "
-elseif m_iSikenKbn = 3 or m_iSikenKbn = 4 then
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKKI_KBN='2' "
-end if
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KYOKAN='" & m_sKyokanCd & "' "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_TUKU_FLG='" & C_TUKU_FLG_TOKU & "'"
-		'//授業区分(C_JUGYO_KBN_JUHYO = 0：授業とみなす, C_JUGYO_KBN_NOT_JUGYO = 1:授業とみなさない)
-		w_sSQL = w_sSQL & vbCrLf & "  AND M41_TOKUKATU.M41_JUGYO_KBN=" & C_JUGYO_KBN_JUHYO
-'2014/07/28 INS 浦川
-		w_sSQL = w_sSQL & vbCrLf & "  )"
-		w_sSQL = w_sSQL & vbCrLf & " ORDER BY "
-		w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN "
-		w_sSQL = w_sSQL & vbCrLf & "  ,CLASS "
-		w_sSQL = w_sSQL & vbCrLf & "  ,KAMOKU"
-'2014/07/28 DEL 浦川
-'		w_sSQL = w_sSQL & vbCrLf & "  )"
-
-'response.write "w_sSQL" & w_sSQL
-'response.end
-
-        iRet = gf_GetRecordset(m_Rs, w_sSQL)
-        If iRet <> 0 Then
-            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
-            msMsg = Err.description
-            f_GetKamoku = 99
-            Exit Do
-        End If
-
-        f_GetKamoku = 0
         Exit Do
     Loop
 
@@ -612,12 +323,6 @@ Function f_GetKamoku_Nenmatu()
 
     Do 
 
-		'試験時間割から取得できるレコード数を取得
-		'call f_SikenJWariCnt(w_iCnt)
-
-		'if w_iCnt = 0 then 
-		'試験時間割からレコードセットが取れなかった場合は、担当教官Tからコンボ作成
-
 			w_sSQL = ""
 			w_sSQL = w_sSQL & vbCrLf & "  SELECT distinct "
 			w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN"
@@ -629,47 +334,7 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & "  FROM"
 
 			w_sSQL = w_sSQL & vbCrLf & "("
-'			w_sSQL = w_sSQL & vbCrLf & "  SELECT"
-'			w_sSQL = w_sSQL & vbCrLf & " T27_GAKUNEN AS GAKUNEN"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_CLASS AS CLASS"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_KAMOKU_CD AS KAMOKU"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI AS CLASSMEI"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD AS GAKKA_CD"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI AS KAMOKUMEI"
-'			w_sSQL = w_sSQL & vbCrLf & "  FROM"
-'			w_sSQL = w_sSQL & vbCrLf & "  T27_TANTO_KYOKAN"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T15_RISYU"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASS"
-'			w_sSQL = w_sSQL & vbCrLf & "  WHERE T27_NENDO = M05_NENDO(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = M05_GAKUNEN(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_CLASS = M05_CLASSNO(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T15_KAMOKU_CD(+)"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND M05_GAKKA_CD = T15_GAKKA_CD"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T15_NYUNENDO(+) = T27_NENDO - T27_GAKUNEN + 1"
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_NENDO = " & m_iNendo
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KYOKAN_CD ='" & m_sKyokanCd & "' "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_SEISEKI_INP_FLG =" & C_SEISEKI_INP_FLG_YES & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND ( " '年度末試験の場合は、開設するもの全て
-'			w_sSQL = w_sSQL & vbCrLf & "       T15_KAISETU1 <" & C_KAI_NASI & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU2 <" & C_KAI_NASI & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU3 <" & C_KAI_NASI & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU4 <" & C_KAI_NASI & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    OR T15_KAISETU5 <" & C_KAI_NASI & " "
-'			w_sSQL = w_sSQL & vbCrLf & "    )"
-'			w_sSQL = w_sSQL & vbCrLf & "  GROUP BY "
-'			w_sSQL = w_sSQL & vbCrLf & "  T27_NENDO"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_GAKUNEN"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_CLASS"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T27_KAMOKU_CD"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI"
-'			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI"
-'			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD"
-'response.write w_ssql & "<BR>"
-'response.end
 			
-'			w_sSQL = w_sSQL & vbCrLf & "  UNION ALL "
-'			
 			w_sSQL = w_sSQL & vbCrLf & " SELECT DISTINCT "
 			w_sSQL = w_sSQL & vbCrLf & " 	T27_GAKUNEN AS GAKUNEN"
 			w_sSQL = w_sSQL & vbCrLf & " 	,T27_CLASS AS CLASS"
@@ -799,8 +464,8 @@ end if
 		w_sSQL = w_sSQL & vbCrLf & "  ,CLASS "
 		w_sSQL = w_sSQL & vbCrLf & "  ,KAMOKU"
 '2017/12/27 Add Kiyomoto <--
-'response.write w_sSQL  & "<BR>"
-'rensponse.end
+' response.write w_sSQL  & "<BR>"
+' rensponse.end
 
         iRet = gf_GetRecordset(m_Rs, w_sSQL)
         If iRet <> 0 Then
@@ -1160,7 +825,7 @@ Sub showPage()
 	//************************************************************
 	function f_ReLoadMyPage(){
 
-	    document.frm.action="sei0100_top.asp";
+	    document.frm.action="sei0800_top.asp";
 	    document.frm.target="topFrame";
 	    document.frm.submit();
 
@@ -1209,7 +874,7 @@ Sub showPage()
 			return;
 		}
 
-	    document.frm.action="sei0100_bottom.asp";
+	    document.frm.action="sei0800_bottom.asp";
 	    document.frm.target="main";
 	    document.frm.submit();
 
@@ -1274,7 +939,7 @@ Sub showPage()
 		Dim w_sKamokuCd_s
 		Dim w_sKamokuNM_s
 
-		call gs_title(" 成績登録 "," 登　録 ") %>
+		call gs_title(" 再試験成績登録 "," 登　録 ") %>
 <br>
 	<table border="0">
 	    <tr><td valign="bottom">
@@ -1284,22 +949,6 @@ Sub showPage()
 
 	                <table border="0">
 	                    <tr valign="middle">
-	                        <td align="left" nowrap>試験区分</td>
-	                        <td align="left" colspan="3">
-								<%If m_Rs_Siken.EOF Then%>
-									<select name="txtSikenKBN" style='width:150px;' DISABLED>
-										<option value="">データがありません
-								<%Else%>
-									<select name="txtSikenKBN" style='width:150px;' onchange = 'javascript:f_ReLoadMyPage()'>
-									<%Do Until m_Rs_Siken.EOF%>
-										<option value='<%=m_Rs_Siken("M01_SYOBUNRUI_CD")%>'  <%=f_Selected(cstr(m_Rs_Siken("M01_SYOBUNRUI_CD")),cstr(m_iSikenKbn))%>><%=m_Rs_Siken("M01_SYOBUNRUIMEI")%>
-										<%m_Rs_Siken.MoveNext%>
-									<%Loop%>
-								<%End If%>
-								</select>
-							</td>
-	                        <td>&nbsp;</td>
-
 	                        <td align="left" nowrap>科目</td>
 	                        <td align="left">
 								<%If m_iSikenKbn = "" Then%>
@@ -1395,13 +1044,6 @@ Sub showPage()
 							</td>
 	                    </tr>
 						<tr>
-						
-	                        <td align="left" nowrap>最終更新日</td>
-	                        
-	                        <td align="left" colspan="3" nowrap>
-								<input type="text" name="txtUpdDate" value="<%=gf_GetT16UpdDate(m_iNendo,w_iGakunen_s,w_sGakkaCd_s,w_sKamokuCd_s,"")%>" onFocus="blur()" readonly style="BACKGROUND-COLOR: #E4E4ED">
-							</td>
-					        
 					        <td colspan="7" align="right">
 					        <input type="button" class="button" value="　表　示　" onclick="javasript:f_Search();">
 					        </td>
@@ -1422,7 +1064,9 @@ Sub showPage()
 	<input type="hidden" name="txtKamokuNM" value="<%=w_sKamokuNM_s%>">
 	<input type="hidden" name="txtGakkaCd" value="<%=w_sGakkaCd_s%>">
 	<input type="hidden" name="txtTable" value="<%=m_sGetTable%>">
-	
+	<!--ADD ST-->  
+	<input type="hidden" name="txtUpdDate" value="<%=gf_GetT16UpdDate(m_iNendo,w_iGakunen_s,w_sGakkaCd_s,w_sKamokuCd_s,"")%>">
+	<!--ADD ED --> 
 	<input type="hidden" name="SYUBETU" value="">
 	
 	</form>
