@@ -258,6 +258,7 @@ Select Case p_menu
 		<% if gf_empMenu("SKN0120") then %><tr><td><a class=menu href="../skn/skn0120/" target="<%=C_MAIN_FRAME%>">ŽŽŒ±ŠÄ“Â–Æœ\¿“o˜^</a></td></tr><% End if %>
 		<% if gf_empMenu("SEI0100") then %><tr><td><a class=menu href="../sei/sei0100/" target="<%=C_MAIN_FRAME%>">¬Ñ“o˜^</a></td></tr><% End if %>
 		<% if gf_empMenu("SEI0500") then %><tr><td><a class=menu href="../sei/sei0500/" target="<%=C_MAIN_FRAME%>">ŽÀ—ÍŽŽŒ±¬Ñ“o˜^</a></td></tr><% End if %>
+		<% if gf_empMenu("SEI0500") then %><tr><td><a class=menu href="../sei/sei0800/" target="<%=C_MAIN_FRAME%>">ÄŽŽŒ±¬Ñ“o˜^</a></td></tr><% End if %>
 		<% if gf_empMenu("SEI0400") then %><tr><td><a class=menu href="../sei/sei0400/" target="<%=C_MAIN_FRAME%>">ŽŽŒ±–ˆŠŒ©“o˜^</a></td></tr><% End if %>
 		<% if gf_empMenu("SEI0600") then %><tr><td><a class=menu href="../sei/sei0600/" target="<%=C_MAIN_FRAME%>">Œ‡È“ú”“o˜^</a></td></tr><% End if %>
 		<% if gf_empMenu("SKN0170") then %><tr><td><a class=menu href="../skn/skn0170/" target="<%=C_MAIN_FRAME%>">ŽŽŒ±ŽžŠÔŠ„(ƒNƒ‰ƒX•Ê)</a></td></tr><% End if %>
