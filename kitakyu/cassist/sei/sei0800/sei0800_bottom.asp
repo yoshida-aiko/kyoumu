@@ -169,10 +169,12 @@ Sub Main()
 				Exit Do
 			End If
 			
-			'===============================
-			'//欠課数の取得
-			'===============================
-			' If f_GetSyukketu() <> 0 Then m_bErrFlg = True : Exit Do		
+			'//最初の生徒の学籍番号を取得
+			if not m_Rs.EOF then
+				m_FirstGakusekiNo = m_Rs("GAKUSEKI_NO")
+				m_Rs.movefirst
+			end if
+		
 	    End If
 		
 	   '// ページを表示
@@ -212,65 +214,6 @@ Sub s_SetParam()
 	
 End Sub
 
-'********************************************************************************
-'*  [機能]  欠課数、遅刻数を取得する
-'*  [引数]  なし
-'*  [戻値]  なし
-'*  [説明]  
-'********************************************************************************
-Function f_GetSyukketu()
-	Dim w_iRet
-	'Dim w_bZenkiOnly
-	'Dim w_sSikenKBN
-	Dim w_sTKyokanCd
-	
-    On Error Resume Next
-    Err.Clear
-	
-    f_GetSyukketu = 1
-
-	Do
-		'==========================================
-		'//科目担当教官の教官CDの取得
-		'==========================================
-        w_iRet = f_GetTantoKyokan2(w_sTKyokanCd)
-		If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
-	
-		'==========================================
-		'//試験科目が前期のみか通年かを調べる
-		'==========================================
-		'//前期のみの場合はT21より前記期末試験までの欠課数を取得する
-		'w_iRet = f_SikenInfo(w_bZenkiOnly)
-		'If w_iRet<> 0 Then
-		'	Exit Do
-		'End If 
-		
-		'If w_bZenkiOnly = True Then
-		'	w_sSikenKBN = C_SIKEN_ZEN_KIM
-		'Else
-		'	w_sSikenKBN = m_sSikenKBN
-		'End If
-		
-		'//最初の生徒の学籍番号を取得
-		if not m_Rs.EOF then
-			m_FirstGakusekiNo = m_Rs("GAKUSEKI_NO")
-			m_Rs.movefirst
-		end if
-
-		'==========================================
-		'//科目に対する結果,遅刻の値取得
-		'==========================================
-		'if not gf_GetSyukketuData(m_SRs,w_sSikenKBN,m_sGakuNo,w_sTKyokanCd,m_sClassNo,m_sKamokuCd,w_skaisibi,w_sSyuryobi,"") then
-		if not gf_GetSyukketuData2(m_SRs,m_sSikenKBN,m_sGakuNo,w_sTKyokanCd,m_sClassNo,m_sKamokuCd,w_skaisibi,w_sSyuryobi,"",m_iNendo,m_iShikenInsertType,m_FirstGakusekiNo,m_sSyubetu) then
-			Exit Do
-		end if
-		
-		'//正常終了
-	    f_GetSyukketu = 0
-		Exit Do
-	Loop
-
-End Function 
 
 '********************************************************************************
 '*  [機能]  試験区分が前期期末の時は、その科目が前期のみか通年かを調べる
@@ -440,8 +383,8 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & " AND T16_HYOKA_FUKA_KBN NOT IN(" & C_HYOKA_FUKA_KEKKA &  "," & C_HYOKA_FUKA_BOTH & ") "
 		w_sSQL = w_sSQL & " ORDER BY A.T16_GAKUSEKI_NO "
 
-		'  response.write w_sSQL & "<BR>"
-		'  response.end
+		'   response.write w_sSQL & "<BR>"
+		'   response.end
 		If gf_GetRecordset(m_Rs, w_sSQL) <> 0 Then
 			'ﾚｺｰﾄﾞｾｯﾄの取得失敗
 			f_getdate = 99
@@ -451,6 +394,7 @@ Dim w_iNyuNendo
 		
 		m_iSouJyugyou = gf_SetNull2String(m_Rs("SOUJI"))
 		m_iJunJyugyou = gf_SetNull2String(m_Rs("JYUNJI"))
+		
 		
 		'//ﾚｺｰﾄﾞカウント取得
 		m_rCnt=gf_GetRsCount(m_Rs)

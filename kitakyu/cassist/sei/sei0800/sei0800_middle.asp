@@ -441,6 +441,7 @@ function f_GetUpdateDate(p_Nendo,p_KamokuCd,p_ShikenKbn,p_TUKU_FLG,p_FirstGakuse
 	w_Sql = w_Sql & " and	" & w_KamokuName & "= '"   & p_KamokuCd   & "' "
 	
 ' response.write "w_Sql:" &  w_Sql & "<BR>"
+'  response.end
 
 	If gf_GetRecordset(w_Rs,w_Sql) <> 0 Then
 		'ﾚｺｰﾄﾞｾｯﾄの取得失敗
@@ -631,11 +632,9 @@ End If
 						<th class=header3 width="96"  align="center">実施科目</th>
 						<%
 							If f_LevelChk(m_sGakuNo,m_sKamokuCd) = true then 
-								w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & m_sKamokuNM
-								'w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd) del 2017/12/26 Nishimura
+								w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd)
 							Else
-								w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & m_sKamokuNM
-								'w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd) del 2017/12/26 Nishimura
+								w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd)
 							End If
 						%>
 						<td class=detail colspan="5" align="center"><%=w_str%></td>
