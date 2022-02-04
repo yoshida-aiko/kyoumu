@@ -37,6 +37,7 @@
     Dim     m_SchoolFlg
     Dim     m_SQL
     Dim     hidSeiseki
+    Dim     m_UpdateDate
 '///////////////////////////メイン処理/////////////////////////////
 
     'ﾒｲﾝﾙｰﾁﾝ実行
@@ -74,6 +75,7 @@ Sub Main()
 	i_max           = request("i_Max")
 	m_sGakuNo	    = Cint(request("txtGakuNo"))	'//学年
 	m_sGakkaCd	    = request("txtGakkaCd")			'//学科
+    m_UpdateDate	= request("txtUpdateDate")			'//学科
 
     Do
         '// ﾃﾞｰﾀﾍﾞｰｽ接続
@@ -151,38 +153,40 @@ Dim w_Sisekiarray
 		For i=1 to i_max : Do
             '成績が否の場合は、次の学生へ
             if w_Sisekiarray(i-1) = 2 then Exit Do
+              
+            '//実授業時間取得(sei0800_upd_func.asp内関数)
+            Call Incs_GetJituJyugyou(i)
+            
+            '//学期末の場合、最低時間を取得する
+            if cInt(m_sSikenKBN) = C_SIKEN_KOU_KIM then
+                '//最低時間取得(sei0800_upd_func.asp内関数)
+                If Not Incf_GetSaiteiJikan(i) then Exit Function
+            End if
+            
+            if m_SchoolFlg = true then
+                w_DataKbn = 0
+                w_DataKbnFlg = false
+                
+                '//未評価、評価不能の設定
+                if cint(gf_SetNull2Zero(request("hidMihyoka"))) <> 0 then
+                    w_DataKbn = cint(gf_SetNull2Zero(request("hidMihyoka")))
+                    w_DataKbnFlg = true
+                else
+                    w_DataKbn = cint(gf_SetNull2Zero(request("chkHyokaFuno" & i)))
+                    
+                    if w_DataKbn = cint(C_HYOKA_FUNO) then
+                        w_DataKbnFlg = true
+                    end if
+                end if
+            end if
 
-			'//実授業時間取得(sei0800_upd_func.asp内関数)
-			Call Incs_GetJituJyugyou(i)
-			
-			'//学期末の場合、最低時間を取得する
-			if cInt(m_sSikenKBN) = C_SIKEN_KOU_KIM then
-				'//最低時間取得(sei0800_upd_func.asp内関数)
-				If Not Incf_GetSaiteiJikan(i) then Exit Function
-			End if
-			
-			if m_SchoolFlg = true then
-				w_DataKbn = 0
-				w_DataKbnFlg = false
-				
-				'//未評価、評価不能の設定
-				if cint(gf_SetNull2Zero(request("hidMihyoka"))) <> 0 then
-					w_DataKbn = cint(gf_SetNull2Zero(request("hidMihyoka")))
-					w_DataKbnFlg = true
-				else
-					w_DataKbn = cint(gf_SetNull2Zero(request("chkHyokaFuno" & i)))
-					
-					if w_DataKbn = cint(C_HYOKA_FUNO) then
-						w_DataKbnFlg = true
-					end if
-				end if
-			end if
-			
+            
 			'//T16_RISYU_KOJINにUPDATE
 			w_sSQL = ""
 			w_sSQL = w_sSQL & vbCrLf & " UPDATE T16_RISYU_KOJIN SET "
 			' w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = " & C_GOUKAKUTEN  & ","
-			w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = 60,"
+            w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = 60,"
+            w_sSQL = w_sSQL & vbCrLf & "   T16_KOUSINBI_KIMATU_K = '" & gf_YYYY_MM_DD(date(),"/") & "',"
             w_sSQL = w_sSQL & vbCrLf & "   T16_UPD_DATE = '" & gf_YYYY_MM_DD(date(),"/") & "', "
             w_sSQL = w_sSQL & vbCrLf & "   T16_UPD_USER = '"  & Trim(Session("LOGIN_ID")) & "' "
             w_sSQL = w_sSQL & vbCrLf & " WHERE "
@@ -197,7 +201,7 @@ Dim w_Sisekiarray
             End If
             ' response.write  "txtGseiNo:" & Trim(request("txtGseiNo"&i)) & "<BR>"
             ' response.write w_sSQL & "<BR>"
-	    Loop Until 1: Next
+        Loop Until 1: Next
 		'response.end
         '//正常終了
         f_Update = 0
@@ -321,7 +325,7 @@ Sub showPage()
 	<input type=hidden name=txtClassNo  value="<%=trim(Request("txtClassNo"))%>">
 	<input type=hidden name=txtKamokuCd value="<%=trim(Request("txtKamokuCd"))%>">
 	<input type=hidden name=txtGakkaCd  value="<%=trim(Request("txtGakkaCd"))%>">
-
+    <input type=hidden name=txtUpdateDate  value="<%=m_UpdateDate%>">
     </form>
     </center>
     </body>

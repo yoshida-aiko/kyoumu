@@ -99,7 +99,7 @@ Sub Main()
 '*  [戻値]  なし
 '*  [説明]  
 '********************************************************************************
-'response.write "middle START" & "<BR>"
+' response.write "middle START" & "<BR>"
     Dim w_iRet              '// 戻り値
     Dim w_sSQL              '// SQL文
 	Dim w_sWinTitle, w_sMsgTitle, w_sMsg, w_sRetURL, w_sTarget
@@ -128,7 +128,7 @@ Sub Main()
 
 	    '// ﾊﾟﾗﾒｰﾀSET
 	    Call s_SetParam()
-
+	
 		'// 不正アクセスチェック
 		Call gf_userChk(session("PRJ_No"))
 		
@@ -140,10 +140,14 @@ Sub Main()
 			m_iKikan = "NO"	'成績入力期間外の場合は、表示のみ
 		End If
 
-		if not f_GetUpdateDate(m_iNendo,m_sKamokuCd,m_sSikenKBN,m_TUKU_FLG,m_sFirstGakusekiNo,m_UpdateDate) then
+		'===============================
+		'//最新更新日を取得
+		'===============================
+		'//クラスの学年末成績を最後に更新した日を取得
+		If f_GetUpdateDate(m_UpdateDate) <> 0 Then 
 			m_bErrFlg = True
 			Exit Do
-		end if
+		End If
 		
 		'// ページを表示
 		Call showPage()
@@ -182,7 +186,6 @@ Sub s_SetParam()
 	m_sGakkaCd_s	= request("txtGakkaCd")
 	m_sKamokuCd_s	= request("txtKamokuCd")
 	
-	m_UpdateDate = ""
 	m_sFirstGakusekiNo	= request("hidFirstGakusekiNo")
 	
 	m_iCount = cint(request("i_Max"))
@@ -373,87 +376,69 @@ Function f_LevelChk(p_Gakunen,p_KamokuCd)
     Call gf_closeObject(w_Rs)
 End Function
 
-'*******************************************************************************
-' 機　　能：選んだ試験区分,科目の更新日を取得する
-' 
-' 返　　値：
-' 　　　　　(True)成功, (False)失敗
-' 引　　数：p_sSikenKbn			- 試験区分
-' 　　　　　p_Nendo				- 年度
-' 　　　　　p_KamokuCd			- 科目コード
-'			p_FirstGakusekiNo	- 学籍NO
-'			p_TUKU_FLG			- 科目区分(0:通常、1:特活)
-'			(戻り値)p_UpdateDate - 科目実績登録の更新日
-' 機能詳細：
-' 備　　考：
-' old_ver → gf_GetT16UpdDate(m_iNendo,m_sGakuNo_s,m_sGakkaCd_s,m_sKamokuCd_s,"")
-'*******************************************************************************
-function f_GetUpdateDate(p_Nendo,p_KamokuCd,p_ShikenKbn,p_TUKU_FLG,p_FirstGakusekiNo,p_UpdateDate)
-	
-	Dim w_Sql,w_Rs
-	Dim w_ShikenType
-	Dim w_Table
-	Dim w_TableName
-	Dim w_KamokuName
-	
-	On Error Resume Next
-	Err.Clear
-	
-	f_GetUpdateDate = false
-	
-	if cint(p_TUKU_FLG) = cint(C_TUKU_FLG_TUJO) then
-		w_Table = "T16"
-		w_TableName = "T16_RISYU_KOJIN"
-		w_KamokuName = "T16_KAMOKU_CD"
-	else
-		w_Table = "T34"
-		w_TableName = "T34_RISYU_TOKU"
-		w_KamokuName = "T34_TOKUKATU_CD"
-	end if
-	
-	select case cint(p_ShikenKbn)
+'********************************************************************************
+'*  [機能]  最終更新日の取得
+'*  [引数]  なし
+'*  [戻値]  最終更新日
+'*  [説明]  
+'********************************************************************************
+Function f_GetUpdateDate(p_UpdateDate)
+
+    Dim w_sSQL
+    Dim w_Rs
+    Dim w_iRet
+
+    On Error Resume Next
+    Err.Clear
+    
+    f_GetUpdateDate = 1
+
+    Do 
+
+		w_sSQL = ""
+		w_sSQL = w_sSQL & vbCrLf & " SELECT "
+		w_sSQL = w_sSQL & vbCrLf & "  MAX(T16_KOUSINBI_KIMATU_K)"
+		w_sSQL = w_sSQL & " FROM "
+		w_sSQL = w_sSQL & " 	T16_RISYU_KOJIN A,T11_GAKUSEKI B,T13_GAKU_NEN C "
+		w_sSQL = w_sSQL & " WHERE"
+		w_sSQL = w_sSQL & " 	A.T16_NENDO = " & Cint(m_iNendo) & " "
+		w_sSQL = w_sSQL & " AND	A.T16_KAMOKU_CD = '" & m_sKamokuCd & "' "
+		w_sSQL = w_sSQL & " AND	A.T16_GAKUSEI_NO = B.T11_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " AND	A.T16_GAKUSEI_NO = C.T13_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " AND	C.T13_GAKUNEN = " & Cint(m_sGakuNo) & " "
+		w_sSQL = w_sSQL & " AND	C.T13_CLASS = " & Cint(m_sClassNo) & " "
+		w_sSQL = w_sSQL & " AND	A.T16_NENDO = C.T13_NENDO "
+
+		'//置換元の生徒ははずす(C_TIKAN_KAMOKU_MOTO = 1    '置換元)
+		w_sSQL = w_sSQL & " AND	A.T16_OKIKAE_FLG <> " & C_TIKAN_KAMOKU_MOTO
+
+		'//必修か選択科目のうち選択している学生のみを取得する		'INS 2019/03/06 藤林
+		w_sSQL = w_sSQL & " AND	( T16_HISSEN_KBN = " & C_HISSEN_HIS
+		w_sSQL = w_sSQL & "       OR (T16_HISSEN_KBN = " & C_HISSEN_SEN & " AND T16_SELECT_FLG = 1) "
+		w_sSQL = w_sSQL & " 	) "
+		w_sSQL = w_sSQL & " AND T16_HYOKA_FUKA_KBN NOT IN(" & C_HYOKA_FUKA_KEKKA &  "," & C_HYOKA_FUKA_BOTH & ") "
+				
+        iRet = gf_GetRecordset(w_Rs, w_sSQL)
+        If iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            msMsg = Err.description
+            f_GetUpdateDate = 99
+            Exit Do
+        End If
 		
-		case C_SIKEN_ZEN_TYU '前期中間試験
-			w_ShikenType = w_Table & "_KOUSINBI_TYUKAN_Z"
-			
-		case C_SIKEN_ZEN_KIM '前期期末試験
-			w_ShikenType = w_Table & "_KOUSINBI_KIMATU_Z"
-			
-		case C_SIKEN_KOU_TYU '後期中間試験
-			w_ShikenType = w_Table & "_KOUSINBI_TYUKAN_K"
-			
-		case C_SIKEN_KOU_KIM '後期期末試験
-			w_ShikenType = w_Table & "_KOUSINBI_KIMATU_K"
-			
-		case else
-			exit function
-			
-	end select
-	
-	w_Sql = ""
-	w_Sql = w_Sql & " select "
-	w_Sql = w_Sql & " 		" & w_ShikenType
-	w_Sql = w_Sql & " from "
-	w_Sql = w_Sql & " 		" & w_TableName
-	w_Sql = w_Sql & " where "
-	w_Sql = w_Sql & " 		" & w_Table & "_GAKUSEKI_NO= '"   & p_FirstGakusekiNo   & "' "
-	w_Sql = w_Sql & " and	" & w_Table & "_NENDO = " & p_Nendo
-	w_Sql = w_Sql & " and	" & w_KamokuName & "= '"   & p_KamokuCd   & "' "
-	
-' response.write "w_Sql:" &  w_Sql & "<BR>"
-'  response.end
+		'//戻り値ｾｯﾄ
+		If w_Rs.EOF = False Then
+			p_UpdateDate = w_Rs("MAX(T16_KOUSINBI_KIMATU_K)")
+		End If
+		'response.write "p_UpdateDate" & p_UpdateDate & "<BR>"
 
-	If gf_GetRecordset(w_Rs,w_Sql) <> 0 Then
-		'ﾚｺｰﾄﾞｾｯﾄの取得失敗
-		msMsg = Err.description
-		Exit function
-	End If
-	
-	p_UpdateDate = gf_YYYY_MM_DD(w_Rs(0),"/")
+        f_GetUpdateDate = 0
+        Exit Do
+    Loop
 
-	f_GetUpdateDate = true
-	
-end function
+    Call gf_closeObject(w_Rs)
+
+End Function
 
 '********************************************************************************
 '*  [機能]  未評価の設定

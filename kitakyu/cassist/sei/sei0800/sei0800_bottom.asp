@@ -111,7 +111,7 @@ Sub Main()
 
 		'// ﾊﾟﾗﾒｰﾀSET
 		Call s_SetParam()
-			
+
 		'//評価不能チェックの処理は、熊本だけのため学校番号のチェック
 		'//Trueなら熊本電波
 		if not gf_ChkDisp(C_DATAKBN_DISP,m_SchoolFlg) then
@@ -169,12 +169,6 @@ Sub Main()
 				Exit Do
 			End If
 			
-			'//最初の生徒の学籍番号を取得
-			if not m_Rs.EOF then
-				m_FirstGakusekiNo = m_Rs("GAKUSEKI_NO")
-				m_Rs.movefirst
-			end if
-		
 	    End If
 		
 	   '// ページを表示
@@ -402,6 +396,72 @@ Dim w_iNyuNendo
 		f_getdate = 0
 		Exit Do
 	Loop
+
+End Function
+
+'********************************************************************************
+'*  [機能]  最終更新日の取得
+'*  [引数]  なし
+'*  [戻値]  最終更新日
+'*  [説明]  
+'********************************************************************************
+Function f_GetKousinbi(p_sKoushinbi)
+
+    Dim w_sSQL
+    Dim w_Rs
+    Dim w_iRet
+
+    On Error Resume Next
+    Err.Clear
+    
+    f_GetKousinbi = 1
+
+    Do 
+
+		w_sSQL = ""
+		w_sSQL = w_sSQL & vbCrLf & " SELECT "
+		w_sSQL = w_sSQL & vbCrLf & "  MAX(T16_KOUSINBI_KIMATU_K)"
+		w_sSQL = w_sSQL & " FROM "
+		w_sSQL = w_sSQL & " 	T16_RISYU_KOJIN A,T11_GAKUSEKI B,T13_GAKU_NEN C "
+		w_sSQL = w_sSQL & " WHERE"
+		w_sSQL = w_sSQL & " 	A.T16_NENDO = " & Cint(m_iNendo) & " "
+		w_sSQL = w_sSQL & " AND	A.T16_KAMOKU_CD = '" & m_sKamokuCd & "' "
+		w_sSQL = w_sSQL & " AND	A.T16_GAKUSEI_NO = B.T11_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " AND	A.T16_GAKUSEI_NO = C.T13_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " AND	C.T13_GAKUNEN = " & Cint(m_sGakuNo) & " "
+		w_sSQL = w_sSQL & " AND	C.T13_CLASS = " & Cint(m_sClassNo) & " "
+		w_sSQL = w_sSQL & " AND	A.T16_NENDO = C.T13_NENDO "
+
+		'//置換元の生徒ははずす(C_TIKAN_KAMOKU_MOTO = 1    '置換元)
+		w_sSQL = w_sSQL & " AND	A.T16_OKIKAE_FLG <> " & C_TIKAN_KAMOKU_MOTO
+
+		'//必修か選択科目のうち選択している学生のみを取得する		'INS 2019/03/06 藤林
+		w_sSQL = w_sSQL & " AND	( T16_HISSEN_KBN = " & C_HISSEN_HIS
+		w_sSQL = w_sSQL & "       OR (T16_HISSEN_KBN = " & C_HISSEN_SEN & " AND T16_SELECT_FLG = 1) "
+		w_sSQL = w_sSQL & " 	) "
+		w_sSQL = w_sSQL & " AND T16_HYOKA_FUKA_KBN NOT IN(" & C_HYOKA_FUKA_KEKKA &  "," & C_HYOKA_FUKA_BOTH & ") "
+		w_sSQL = w_sSQL & " ORDER BY A.T16_GAKUSEKI_NO "
+				
+        iRet = gf_GetRecordset(w_Rs, w_sSQL)
+        If iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            msMsg = Err.description
+            f_GetKousinbi = 99
+            Exit Do
+        End If
+		
+		'//戻り値ｾｯﾄ
+		If w_Rs.EOF = False Then
+			p_sKoushinbi = w_Rs("MAX(T16_KOUSINBI_KIMATU_K)")
+		End If
+
+		response.write "p_sKoushinbi" & p_sKoushinbi & "<BR>"
+
+        f_GetKousinbi = 0
+        Exit Do
+    Loop
+
+    Call gf_closeObject(w_Rs)
 
 End Function
 
@@ -1458,7 +1518,7 @@ Sub showPage()
 	<input type="hidden" name="hidMihyoka" value ="<%=w_DataKbn%>">
 	<input type="hidden" name="hidSchoolFlg" value ="<%=m_SchoolFlg%>">
 	<input type="hidden" name="hidSeiseki" value="">
-	
+
 	</FORM>
 	</center>
 	</body>
