@@ -325,10 +325,7 @@ Function f_GetKamoku_Nenmatu()
 
 			w_sSQL = ""
 			w_sSQL = w_sSQL & vbCrLf & "  SELECT distinct "
-			w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " ,CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " ,KAMOKU"
-			w_sSQL = w_sSQL & vbCrLf & " ,CLASSMEI"
+			w_sSQL = w_sSQL & vbCrLf & "  KAMOKU"
 			w_sSQL = w_sSQL & vbCrLf & " ,GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " ,KAMOKUMEI"
 			w_sSQL = w_sSQL & vbCrLf & "  FROM"
@@ -336,10 +333,7 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & "("
 			
 			w_sSQL = w_sSQL & vbCrLf & " SELECT DISTINCT "
-			w_sSQL = w_sSQL & vbCrLf & " 	T27_GAKUNEN AS GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_CLASS AS CLASS"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_KAMOKU_CD AS KAMOKU"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASSMEI AS CLASSMEI"
+			w_sSQL = w_sSQL & vbCrLf & " 	T27_KAMOKU_CD AS KAMOKU"
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD AS GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " 	,T17_KAMOKUMEI AS KAMOKUMEI"
 			w_sSQL = w_sSQL & vbCrLf & " FROM"
@@ -350,48 +344,28 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & " 		T27_NENDO = M05_NENDO "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = M05_GAKUNEN "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_CLASS = M05_CLASSNO	"
-
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T17_KAMOKU_CD(+)"
-
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T17_KAMOKU_CD"
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = T17_HAITOGAKUNEN "
-
-'			w_sSQL = w_sSQL & vbCrLf & "    AND M05_GAKKA_CD(+) = T17_GAKKA_CD "　DEL 2017.12.22 Nishimura 1クラスに複数学科が存在するのでコースCDでリンクするように修正
-
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T17_NENDO(+) = T27_NENDO "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T17_NENDO = T27_NENDO "
 
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_NENDO = " & m_iNendo
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KYOKAN_CD ='" & m_sKyokanCd & "' "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_SEISEKI_INP_FLG =" & C_SEISEKI_INP_FLG_YES & " "
-
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T17_OKIKAE_FLG >= " & C_TIKAN_KAMOKU_SAKI 
 			w_sSQL = w_sSQL & vbCrLf & "    AND (T17_OKIKAE_FLG > " & C_TIKAN_KAMOKU_SAKI 
 			w_sSQL = w_sSQL & vbCrLf & "    OR  T17_OKIKAE_FLG = 0) "
-'			w_sSQL = w_sSQL & vbCrLf & "    AND T17_COURSE_CD IN ( '0' , CASE WHEN M05_COURSE_CD IS NOT NULL THEN M05_COURSE_CD ELSE T17_COURSE_CD END) " '2017.12.22 Ins Nishimura
 			w_sSQL = w_sSQL & vbCrLf & "    AND T17_COURSE_CD IN ( '0' , CASE WHEN M05_GAKKA_CD = T17_GAKKA_CD THEN (CASE WHEN M05_COURSE_CD IS NOT NULL THEN M05_COURSE_CD ELSE T17_COURSE_CD END ) ELSE T17_COURSE_CD END ) " '2019.02.12 Upd Kiyomoto
 
 			w_sSQL = w_sSQL & vbCrLf & "  GROUP BY "
 			w_sSQL = w_sSQL & vbCrLf & " 	T27_NENDO"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_GAKUNEN"
-			w_sSQL = w_sSQL & vbCrLf & " 	,T27_CLASS"
 			w_sSQL = w_sSQL & vbCrLf & " 	,T27_KAMOKU_CD"
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD"
-			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASSMEI"
 			w_sSQL = w_sSQL & vbCrLf & " 	,T17_KAMOKUMEI"
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD"
 			
-			
-			
 			w_sSQL = w_sSQL & vbCrLf & " union all "
-'		Else 
-'			w_sSQL = ""
 
 			w_sSQL = w_sSQL & vbCrLf & " SELECT "
-			w_sSQL = w_sSQL & vbCrLf & "  T26.T26_GAKUNEN AS GAKUNEN "
-			w_sSQL = w_sSQL & vbCrLf & "  ,T26.T26_CLASS AS CLASS "
-			w_sSQL = w_sSQL & vbCrLf & "  ,T26.T26_KAMOKU AS KAMOKU "
-			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_CLASSMEI AS CLASSMEI "
+			w_sSQL = w_sSQL & vbCrLf & "  T26.T26_KAMOKU AS KAMOKU "
 			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_GAKKA_CD AS GAKKA_CD "
 			w_sSQL = w_sSQL & vbCrLf & "  ,T15.T15_KAMOKUMEI AS KAMOKUMEI "
 			w_sSQL = w_sSQL & vbCrLf & " FROM "
@@ -416,22 +390,14 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & "  OR T26_SEISEKI_KYOKAN5 ='" & m_sKyokanCd & "'"
 			w_sSQL = w_sSQL & vbCrLf & "  )"
 			w_sSQL = w_sSQL & vbCrLf & " GROUP BY "
-			w_sSQL = w_sSQL & vbCrLf & "  T26.T26_GAKUNEN "
-			w_sSQL = w_sSQL & vbCrLf & "  ,T26.T26_CLASS "
-			w_sSQL = w_sSQL & vbCrLf & "  ,T26.T26_KAMOKU "
-			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_CLASSMEI "
+			w_sSQL = w_sSQL & vbCrLf & "  T26.T26_KAMOKU "
 			w_sSQL = w_sSQL & vbCrLf & "  ,T15.T15_KAMOKUMEI"
 			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_GAKKA_CD"
-'
-'		End If
 
 		w_sSQL = w_sSQL & vbCrLf & " UNION ALL "
 
 		w_sSQL = w_sSQL & vbCrLf & " SELECT  DISTINCT "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_GAKUNEN AS GAKUNEN, "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS AS CLASS, "
 		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_KAMOKU AS KAMOKU, "
-		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_CLASSMEI AS CLASSMEI, "
 		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_GAKKA_CD AS GAKKA_CD, "
 		w_sSQL = w_sSQL & vbCrLf & "  M41_TOKUKATU.M41_MEISYO AS KAMOKUMEI "
 		w_sSQL = w_sSQL & vbCrLf & " FROM "
@@ -455,14 +421,10 @@ end if
 		'//授業区分(C_JUGYO_KBN_JUHYO = 0：授業とみなす, C_JUGYO_KBN_NOT_JUGYO = 1:授業とみなさない)
 		w_sSQL = w_sSQL & vbCrLf & "  AND M41_TOKUKATU.M41_JUGYO_KBN=" & C_JUGYO_KBN_JUHYO
 		w_sSQL = w_sSQL & vbCrLf & " ORDER BY "
-		w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN "
-		w_sSQL = w_sSQL & vbCrLf & "  ,CLASS "
-		w_sSQL = w_sSQL & vbCrLf & "  ,KAMOKU)"
+		w_sSQL = w_sSQL & vbCrLf & "  KAMOKU)"
 '2017/12/27 Add Kiyomoto -->
 		w_sSQL = w_sSQL & vbCrLf & " ORDER BY "
-		w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN "
-		w_sSQL = w_sSQL & vbCrLf & "  ,CLASS "
-		w_sSQL = w_sSQL & vbCrLf & "  ,KAMOKU"
+		w_sSQL = w_sSQL & vbCrLf & "  KAMOKU"
 '2017/12/27 Add Kiyomoto <--
 ' response.write w_sSQL  & "<BR>"
 ' rensponse.end
