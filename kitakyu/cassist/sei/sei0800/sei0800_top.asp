@@ -424,41 +424,8 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_GAKKA_CD"
 '
 '		End If
-
-		w_sSQL = w_sSQL & vbCrLf & " UNION ALL "
-
-		w_sSQL = w_sSQL & vbCrLf & " SELECT  DISTINCT "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_GAKUNEN AS GAKUNEN, "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS AS CLASS, "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_KAMOKU AS KAMOKU, "
-		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_CLASSMEI AS CLASSMEI, "
-		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_GAKKA_CD AS GAKKA_CD, "
-		w_sSQL = w_sSQL & vbCrLf & "  M41_TOKUKATU.M41_MEISYO AS KAMOKUMEI "
-		w_sSQL = w_sSQL & vbCrLf & " FROM "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI ,M05_CLASS,M41_TOKUKATU"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS = M05_CLASS.M05_CLASSNO "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKUNEN = M05_CLASS.M05_GAKUNEN"
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M05_CLASS.M05_NENDO "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KAMOKU = M41_TOKUKATU.M41_TOKUKATU_CD "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M41_TOKUKATU.M41_NENDO "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO=" & m_iNendo & " "
-
-'2015/10/08 学期をシステム年から取得した日付で取得した学期を使用しているため、後期になった時に前期の時間割を参照できなくなっている。
-'		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKKI_KBN='" & m_iGakki & "' " '//2001.12.28.okada
-if m_iSikenKbn = 1 or m_iSikenKbn = 2 then
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKKI_KBN='1' "
-elseif m_iSikenKbn = 3 or m_iSikenKbn = 4 then
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKKI_KBN='2' "
-end if
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KYOKAN='" & m_sKyokanCd & "' "
-		'//授業区分(C_JUGYO_KBN_JUHYO = 0：授業とみなす, C_JUGYO_KBN_NOT_JUGYO = 1:授業とみなさない)
-		w_sSQL = w_sSQL & vbCrLf & "  AND M41_TOKUKATU.M41_JUGYO_KBN=" & C_JUGYO_KBN_JUHYO
-		w_sSQL = w_sSQL & vbCrLf & " ORDER BY "
-		w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN "
-		w_sSQL = w_sSQL & vbCrLf & "  ,CLASS "
-		w_sSQL = w_sSQL & vbCrLf & "  ,KAMOKU)"
 '2017/12/27 Add Kiyomoto -->
+		w_sSQL = w_sSQL & vbCrLf & ")"
 		w_sSQL = w_sSQL & vbCrLf & " ORDER BY "
 		w_sSQL = w_sSQL & vbCrLf & "  GAKUNEN "
 		w_sSQL = w_sSQL & vbCrLf & "  ,CLASS "

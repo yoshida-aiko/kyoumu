@@ -39,7 +39,6 @@
     Public m_rCnt			'レコードカウント
     Public m_sGakkaCd
     Public m_iSyubetu		'出欠値集計方法
-    Public m_TUKU_FLG
 	Public m_iJigenTani		'//１時限の単位数
     
     Public m_iKamoku_Kbn
@@ -135,42 +134,31 @@ Sub Main()
 			Exit Do
 		End If
 
-		'=================
-		'//特別活動を取得
-		'=================
-		'//特別活動(0:通常授業,1:特別活動)
-        If f_getTUKU(m_iNendo,m_sKamokuCd,m_sGakuNo,m_sClassNo,m_TUKU_FLG) <> 0 Then 
-			m_bErrFlg = True
-			Exit Do
-		End If
 	
 		'**********************************************************
 		'通常授業のみ表示　（特別活動は表示しない）
 		'**********************************************************
-		If m_TUKU_FLG = C_TUKU_FLG_TUJO then  '通常授業の場合
-			'=================
-			'//科目情報を取得
-			'=================
-			'//科目区分(0:一般科目,1:専門科目)、及び、必修選択区分(1:必修,2:選択)を調べる
-			'//レベル別区分(0:一般科目,1:レベル別科目)を調べる
-			If f_GetKamokuInfo(m_iKamoku_Kbn,m_iHissen_Kbn,m_ilevelFlg) <> 0 Then 
-				m_bErrFlg = True
-				Exit Do
-			End If			
+		'=================
+		'//科目情報を取得
+		'=================
+		'//科目区分(0:一般科目,1:専門科目)、及び、必修選択区分(1:必修,2:選択)を調べる
+		'//レベル別区分(0:一般科目,1:レベル別科目)を調べる
+		If f_GetKamokuInfo(m_iKamoku_Kbn,m_iHissen_Kbn,m_ilevelFlg) <> 0 Then 
+			m_bErrFlg = True
+			Exit Do
+		End If			
 
-			'===============================
-			'//成績、学生データ取得
-			'===============================
-			'//科目区分がC_KAMOKU_SENMON(0:一般科目)の場合はクラス別に生徒を表示
-			'//科目区分がC_KAMOKU_SENMON(1:専門科目)の場合は学科別に生徒を表示
-			If f_getdate(m_iKamoku_Kbn) <> 0 Then m_bErrFlg = True : Exit Do
-			If m_rs.EOF Then
-				Call ShowPage_No()
-				Exit Do
-			End If
-			
-	    End If
-		
+		'===============================
+		'//成績、学生データ取得
+		'===============================
+		'//科目区分がC_KAMOKU_SENMON(0:一般科目)の場合はクラス別に生徒を表示
+		'//科目区分がC_KAMOKU_SENMON(1:専門科目)の場合は学科別に生徒を表示
+		If f_getdate(m_iKamoku_Kbn) <> 0 Then m_bErrFlg = True : Exit Do
+		If m_rs.EOF Then
+			Call ShowPage_No()
+			Exit Do
+		End If
+				
 	   '// ページを表示
 	   Call showPage()
 	   Exit Do
@@ -646,56 +634,6 @@ Function f_Nyuryokudate()
 
 End Function
 
-
-'********************************************************************************
-'*	[機能]	科目が特別活動であるかを検索
-'*	[引数]	なし
-'*	[戻値]	なし
-'*	[説明]	
-'********************************************************************************
-Function f_getTUKU(p_iNendo,p_sKamoku,p_iGakunen,p_iClass,p_TUKU_FLG)
-
-    Dim w_sSQL
-    Dim w_Rs
-    Dim w_iRet
-
-	On Error Resume Next
-	Err.Clear
-	f_getTUKU = 0
-	p_TUKU_FLG = C_TUKU_FLG_TUJO
-
-	Do
-
-		w_sSQL = ""
-		w_sSQL = w_sSQL & vbCrLf & " SELECT "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_TUKU_FLG "
-		w_sSQL = w_sSQL & vbCrLf & " FROM "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "  T20_NENDO=" & Cint(p_iNendo)
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_KAMOKU ='" & p_sKamoku & "' "
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_GAKUNEN =" & Cint(p_iGakunen)
-		w_sSQL = w_sSQL & vbCrLf & "  AND T20_CLASS =" & Cint(p_iClass)
-
-		w_iRet = gf_GetRecordset(w_Rs, w_sSQL)
-		If w_iRet <> 0 Then
-			'ﾚｺｰﾄﾞｾｯﾄの取得失敗
-			f_getTUKU = 99
-			m_bErrFlg = True
-			Exit Do 
-		End If
-'response.write w_sSQL  & "<BR>"
-		If w_Rs.EOF = false Then
-			p_TUKU_FLG = cStr(gf_SetNull2Zero(w_Rs("T20_TUKU_FLG")))
-		End If
-
-		Exit Do
-	Loop
-    Call gf_closeObject(w_Rs)
-
-End Function
-
-
 '********************************************************************************
 '*	[機能]	データの取得
 '*	[引数]	なし
@@ -925,7 +863,7 @@ Sub showPage()
 
 	i = 1
 	
-	if m_SchoolFlg and m_TUKU_FLG = C_TUKU_FLG_TUJO then
+	if m_SchoolFlg  then
 		w_TableWidth = 760
 		
 		if cint(gf_SetNull2Zero(m_Rs("DataKbn"))) = cint(C_MIHYOKA) or m_iKikan = "NO" then
@@ -1150,51 +1088,50 @@ Sub showPage()
 			
 			'---------------------------------------------------------------------------------------------
 			'通常授業ときの処理
-			if m_TUKU_FLG = C_TUKU_FLG_TUJO then 
-				w_sSeiseki = gf_SetNull2String(m_Rs("SEI"))
-				w_sHyoka = gf_HTMLTableSTR(m_Rs("HYOKAYOTEI"))
+			w_sSeiseki = gf_SetNull2String(m_Rs("SEI"))
+			w_sHyoka = gf_HTMLTableSTR(m_Rs("HYOKAYOTEI"))
+			
+			'前期で終わっている科目の欠課を取得して学期末成績にセットする。2002/02/21 ITO
+			
+			'学年末試験の場合のみ
+			If m_sSikenKBN = C_SIKEN_KOU_KIM Then
 				
-				'前期で終わっている科目の欠課を取得して学期末成績にセットする。2002/02/21 ITO
-				
-				'学年末試験の場合のみ
-				If m_sSikenKBN = C_SIKEN_KOU_KIM Then
-					
-					'前期開設だったら前期期末の欠課を学年末の成績にセットする
-					If w_bZenkiOnly = True Then
-						'学期末成績が更新されていない場合、前期の成績を学年末にセットする。
-						If gf_SetNull2String(m_Rs("T16_KOUSINBI_KIMATU_K")) = "" Then 
-							w_sSeiseki = gf_SetNull2String(m_Rs("SEI_ZK"))			'前期期末成績
-						End If
-						'学期末成績が0
+				'前期開設だったら前期期末の欠課を学年末の成績にセットする
+				If w_bZenkiOnly = True Then
+					'学期末成績が更新されていない場合、前期の成績を学年末にセットする。
+					If gf_SetNull2String(m_Rs("T16_KOUSINBI_KIMATU_K")) = "" Then 
+						w_sSeiseki = gf_SetNull2String(m_Rs("SEI_ZK"))			'前期期末成績
+					End If
+					'学期末成績が0
 '						If gf_SetNull2String(m_Rs("SEI")) = "" Then 
 '							w_sSeiseki = gf_SetNull2String(m_Rs("SEI_ZK"))			'前期期末成績
 '						End If
-					End If
 				End If
-				
-				'前期で終わっている科目の欠課を取得して学期末成績にセットする。2002/02/21 ITO
-				if w_sHyoka = "　" then w_sHyoka = "・"
-				
-				'//科目が選択科目の場合は、生徒が選択しているかどうかを判別する。選択しいない生徒は入力不可とする。
-				w_bNoChange = False
-				
-				If cint(gf_SetNull2Zero(m_iHissen_Kbn)) = cint(gf_SetNull2Zero(C_HISSEN_SEN)) Then 
-					If cint(gf_SetNull2Zero(m_Rs("T16_SELECT_FLG"))) = cint(C_SENTAKU_NO) Then
+			End If
+			
+			'前期で終わっている科目の欠課を取得して学期末成績にセットする。2002/02/21 ITO
+			if w_sHyoka = "　" then w_sHyoka = "・"
+			
+			'//科目が選択科目の場合は、生徒が選択しているかどうかを判別する。選択しいない生徒は入力不可とする。
+			w_bNoChange = False
+			
+			If cint(gf_SetNull2Zero(m_iHissen_Kbn)) = cint(gf_SetNull2Zero(C_HISSEN_SEN)) Then 
+				If cint(gf_SetNull2Zero(m_Rs("T16_SELECT_FLG"))) = cint(C_SENTAKU_NO) Then
+					w_bNoChange = True
+				End If 
+			Else
+				if Cstr(m_iLevelFlg) = "1" then
+					if isNull(m_Rs("T16_LEVEL_KYOUKAN")) = true then
 						w_bNoChange = True
-					End If 
-				Else
-					if Cstr(m_iLevelFlg) = "1" then
-						if isNull(m_Rs("T16_LEVEL_KYOUKAN")) = true then
+					else
+						if m_Rs("T16_LEVEL_KYOUKAN") <> m_sKyokanCd then
 							w_bNoChange = True
-						else
-							if m_Rs("T16_LEVEL_KYOUKAN") <> m_sKyokanCd then
-								w_bNoChange = True
-							End if
 						End if
 					End if
-				End If
+				End if
+			End If
 				
-			End if
+			
 			
 			'==異動ＣＨＫ（2001/12/19日バージョン:okada）================================
 			Dim w_Date
@@ -1220,43 +1157,40 @@ Sub showPage()
 				End if
 			End if
 			
-			'通常授業
-			if Cstr(m_TUKU_FLG) = Cstr(C_TUKU_FLG_TUJO) then 
-				
-				'欠課遅刻数の取得
-				
-				'//欠課数×単位数の取得
-				w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_KEKKA)		'戻り値はNULLの時は""
-				
-				'gf_IIFに渡すときにパラメータを計算するので、パラメータは0に変換
-				w_sKekkasu = gf_IIF(w_sData = "", "", cint(gf_SetNull2Zero(w_sData)) * cint(m_iJigenTani))
+			'通常授業				
+			'欠課遅刻数の取得
+			
+			'//欠課数×単位数の取得
+			w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_KEKKA)		'戻り値はNULLの時は""
+			
+			'gf_IIFに渡すときにパラメータを計算するので、パラメータは0に変換
+			w_sKekkasu = gf_IIF(w_sData = "", "", cint(gf_SetNull2Zero(w_sData)) * cint(m_iJigenTani))
 
 'response.write(w_sGakusekiCd & ":" & " T21 欠課 w_sKekkasu = " & w_sKekkasu & "<BR>")
-				
-				'//１欠課の場合の欠課数の取得
-				w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_KEKKA_1)
-				if w_sKekkasu = "" and w_sData = "" then
-					w_sKekkasu = ""
-				else
-					'どちらか一方""でなければ計算
-					w_sKekkasu = cint(gf_SetNull2Zero(w_sKekkasu)) + cint(gf_SetNull2Zero(w_sData))			'//１欠課の場合の欠課数の取得
-				end if
+			
+			'//１欠課の場合の欠課数の取得
+			w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_KEKKA_1)
+			if w_sKekkasu = "" and w_sData = "" then
+				w_sKekkasu = ""
+			else
+				'どちらか一方""でなければ計算
+				w_sKekkasu = cint(gf_SetNull2Zero(w_sKekkasu)) + cint(gf_SetNull2Zero(w_sData))			'//１欠課の場合の欠課数の取得
+			end if
 
 'response.write(w_sGakusekiCd & ":" & " T21 1欠課 w_sKekkasu = " & w_sKekkasu & "<BR>")
-				
-				'//遅刻数の取得
-				w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_TIKOKU)
-				w_sChikaisu = gf_IIF(w_sData = "", "", cint(gf_SetNull2Zero(w_sData)))
-				
-				'//早退数の取得
-				w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_SOTAI)
-				if w_sChikaisu = "" and w_sData = "" then
-					'w_sKekkasuもw_sDataもどちらも""の時は""のまま
-					w_sChikaisu = ""
-				else
-					'どちらか一方""でなければ計算
-					w_sChikaisu = cint(gf_SetNull2Zero(w_sChikaisu)) + cint(gf_SetNull2Zero(w_sData))			'//１欠課の場合の欠課数の取得
-				end if
+			
+			'//遅刻数の取得
+			w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_TIKOKU)
+			w_sChikaisu = gf_IIF(w_sData = "", "", cint(gf_SetNull2Zero(w_sData)))
+			
+			'//早退数の取得
+			w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_SOTAI)
+			if w_sChikaisu = "" and w_sData = "" then
+				'w_sKekkasuもw_sDataもどちらも""の時は""のまま
+				w_sChikaisu = ""
+			else
+				'どちらか一方""でなければ計算
+				w_sChikaisu = cint(gf_SetNull2Zero(w_sChikaisu)) + cint(gf_SetNull2Zero(w_sData))			'//１欠課の場合の欠課数の取得
 			end if
 			
 			'---------------------------------------------------------------------------------------------
@@ -1295,7 +1229,7 @@ Sub showPage()
 			End If
 			
 			
-			if m_SchoolFlg and m_TUKU_FLG = C_TUKU_FLG_TUJO then
+			if m_SchoolFlg then
 				'//評価不能データ設定
 				w_DataKbn = 0
 				w_Checked = ""
@@ -1324,37 +1258,19 @@ Sub showPage()
 			'========================================================================================
 			'//科目が選択科目の時に科目を選択していない場合(入力不可)
 			'========================================================================================
-			If w_bNoChange = True Then
-				if Cstr(m_TUKU_FLG) = Cstr(C_TUKU_FLG_TUJO) Then%>
-
-					<input type="hidden" name="txtGseiNo<%=i%>" value="<%=m_Rs("GAKUSEI_NO")%>">
-					<input type="hidden" name="txtKaisetu<%=i%>" value="<%=m_Rs("KAISETU")%>">
-					<input type="hidden" name="hidUpdFlg<%=i%>" value="False">
-					<td class="<%=w_cell%>" align="center" width="65"  nowrap <%=w_Padding%>><%=w_sGakusekiCd%></td>
-					<td class="<%=w_cell%>" align="left"   width="150" nowrap <%=w_Padding%>><%=trim(m_Rs("SIMEI"))%><%=w_SSSS%></td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-				<%Else%>
-
-					<input type="hidden" name="txtGseiNo<%=i%>" value="<%=m_Rs("GAKUSEI_NO")%>">
-					<input type="hidden" name="txtKaisetu<%=i%>" value="<%=m_Rs("KAISETU")%>">
-					<input type="hidden" name="hidUpdFlg<%=i%>" value="False">
-					<td class="<%=w_cell%>" align="center" width="65"  nowrap <%=w_Padding%>><%=w_sGakusekiCd%></td>
-					<td class="<%=w_cell%>" align="left"   width="150" nowrap <%=w_Padding%>><%=trim(m_Rs("SIMEI"))%><%=w_SSSS%></td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="100" nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="80"  nowrap <%=w_Padding%>>-</td>
-					<td class="<%=w_cell%>" align="center" width="85"  nowrap <%=w_Padding%>>-</td>
-				<%End if%>
+			If w_bNoChange = True Then%>				
+				<input type="hidden" name="txtGseiNo<%=i%>" value="<%=m_Rs("GAKUSEI_NO")%>">
+				<input type="hidden" name="txtKaisetu<%=i%>" value="<%=m_Rs("KAISETU")%>">
+				<input type="hidden" name="hidUpdFlg<%=i%>" value="False">
+				<td class="<%=w_cell%>" align="center" width="65"  nowrap <%=w_Padding%>><%=w_sGakusekiCd%></td>
+				<td class="<%=w_cell%>" align="left"   width="150" nowrap <%=w_Padding%>><%=trim(m_Rs("SIMEI"))%><%=w_SSSS%></td>
+				<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
+				<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
+				<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
+				<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
+				<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
+				<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
+				
 			<%
 			'=========================================================================
 			'//科目が必修か、または選択科目の時に生徒が科目を選択している場合(入力可)
@@ -1371,17 +1287,11 @@ Sub showPage()
 					<td class="<%=w_cell%>" align="left"  width="150" nowrap <%=w_Padding%>><%=trim(m_Rs("SIMEI"))%><%=w_SSSS%></td>
 					
 					<!-- 2002.03.20 -->
-					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI1"))%></td>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI2"))%></td>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI3"))%></td>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI4"))%></td>
-					<%Else%>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding%>>&nbsp;&nbsp;</td>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding%>>&nbsp;&nbsp;</td>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding%>>&nbsp;&nbsp;</td>
-						<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding%>>&nbsp;&nbsp;</td>
-					<%End If%>
+					<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI1"))%></td>
+					<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI2"))%></td>
+					<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI3"))%></td>
+					<td class="<%=w_cell%>" align="center" width="30" nowrap <%=w_Padding2%>><%=gf_HTMLTableSTR(m_Rs("SEI4"))%></td>
+					
 					
 					<%
 					'//NN対応
@@ -1404,60 +1314,49 @@ Sub showPage()
 					'=========================================================================
 					%>
 				<%If m_iKikan <> "NO" Then%>
-					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
 							
-						<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
-							<select name="Seiseki<%=i%>" style='width:50px;' onchange="">
+					<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
+						<select name="Seiseki<%=i%>" style='width:50px;' onchange="">
+							<option value="1">合</option>
+							<option value="2" selected="">否</option>
+						</select>
+					<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
+							<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>>
+								<input type="button" size="2" name="button<%=i%>" value="<%=w_sHyoka%>" onClick="return f_change(<%=i%>)" class="<%=w_cell%>" style="text-align:center">
+							</td>
+							<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
+					<%Else%>
+							<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>><%=w_sHyoka%></td>
+							<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
+					<%End If%>
+					
+					
+				<%Else%>		
+					<td class="<%=w_cell%>" width="50" align="right" nowrap <%=w_Padding%>>
+						<select name="Seiseki<%=i%>" style='width:50px;' onchange="">
 								<option value="1">合</option>
 								<option value="2" selected="">否</option>
-							</select>
-						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
-								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>>
-									<input type="button" size="2" name="button<%=i%>" value="<%=w_sHyoka%>" onClick="return f_change(<%=i%>)" class="<%=w_cell%>" style="text-align:center">
-								</td>
-								<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
-						<%Else%>
-								<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>><%=w_sHyoka%></td>
-								<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
-						<%End If%>
-					<%Else%>
-							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
-							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
-							<td class="<%=w_cell%>" width="100" nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
-							<td class="<%=w_cell%>" width="80"  nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
-							<td class="<%=w_cell%>" width="85"  nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
-					<%End If%>
+						</select>
+					</td>
 					
-				<%Else%>
-					
-					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
-							
-						<td class="<%=w_cell%>" width="50" align="right" nowrap <%=w_Padding%>>
-							<select name="Seiseki<%=i%>" style='width:50px;' onchange="">
-									<option value="1">合</option>
-									<option value="2" selected="">否</option>
-							</select>
-						</td>
-						
-						<%	'表示のみの場合の合計・平均値を求める
-							If IsNull(w_sSeiseki) = False Then
-								If IsNumeric(CStr(w_sSeiseki)) = True Then
-									w_lSeiTotal = w_lSeiTotal + CLng(w_sSeiseki)
-									w_lGakTotal = w_lGakTotal + 1
-								End If
+					<%	'表示のみの場合の合計・平均値を求める
+						If IsNull(w_sSeiseki) = False Then
+							If IsNumeric(CStr(w_sSeiseki)) = True Then
+								w_lSeiTotal = w_lSeiTotal + CLng(w_sSeiseki)
+								w_lGakTotal = w_lGakTotal + 1
 							End If
-						%>
-						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
-								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
-						<%Else%>
-								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
-						<%End If%>
+						End If
+					%>
+					<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
+							<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
 					<%Else%>
+							<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
 					<%End If%>
+					
 				<%End If%>
 			<%End If%>
 				
-				<% if m_SchoolFlg and m_TUKU_FLG = C_TUKU_FLG_TUJO then %>
+				<% if m_SchoolFlg then %>
 					
 					<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>>
 						<% if w_DataKbn = C_HYOKA_FUNO or w_DataKbn = C_MIHYOKA or w_DataKbn = 0 then %>
@@ -1507,7 +1406,6 @@ Sub showPage()
 	<input type="hidden" name="txtClassNo"  value="<%=m_sClassNo%>">
 	<input type="hidden" name="txtKamokuCd" value="<%=m_sKamokuCd%>">
 	<input type="hidden" name="txtKamokuNM" value="<%=m_sKamokuNM%>">
-	<input type="hidden" name="txtTUKU_FLG" value="<%=m_TUKU_FLG%>">
 	<input type="hidden" name="PasteType"   value="">
 	<!-- 02/03/27 追加 -->
 	<input type="hidden" name="hidSouJyugyou">

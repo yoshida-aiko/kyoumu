@@ -44,7 +44,6 @@
     Public m_sTKyokanCd		'担当科目の教官
 	Dim		m_rCnt			'レコードカウント
     Public m_sGakkaCd
-	Public m_TUKU_FLG		'通常授業フラグ
 	
     Public m_sGakuNo_s		'学年
     Public m_sGakkaCd_s		'学科
@@ -180,7 +179,6 @@ Sub s_SetParam()
 	m_sKamokuCd	= request("txtKamokuCd")
 	m_sKamokuNM	= request("txtKamokuNM")
 	m_sGakkaCd	= request("txtGakkaCd")
-	m_TUKU_FLG	= request("txtTUKU_FLG")
 
 	m_sGakuNo_s	= Cint(request("txtGakuNo"))
 	m_sGakkaCd_s	= request("txtGakkaCd")
@@ -227,10 +225,7 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_NENDO = T24_SIKEN_NITTEI.T24_NENDO"
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_DAIBUNRUI_CD=" & cint(C_SIKEN)
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_NENDO=" & Cint(m_iNendo)
-		' コメント　UPD
-		' w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & Cint(m_sSikenKBN)
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & C_SIKEN_SAISI
-		' コメント　UPD
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_CD='0'"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_GAKUNEN=" & Cint(m_sGakuNo)
 		
@@ -291,7 +286,6 @@ Function f_GetKamokuName(p_Gakunen,p_GakkaCd,p_KamokuCd)
 	
     Do 
 
-	If m_TUKU_FLG = C_TUKU_FLG_TUJO Then '通常授業と特別活動で取り先を変える。
 		w_sSQL = ""
 		w_sSQL = w_sSQL & vbCrLf & " SELECT "
 		w_sSQL = w_sSQL & vbCrLf & "  T15_RISYU.T15_KAMOKUMEI AS KAMOKUMEI"
@@ -300,15 +294,6 @@ Function f_GetKamokuName(p_Gakunen,p_GakkaCd,p_KamokuCd)
 		w_sSQL = w_sSQL & vbCrLf & "      T15_RISYU.T15_NYUNENDO=" & cint(m_iNendo) - cint(p_Gakunen) + 1
 		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_GAKKA_CD='" & p_GakkaCd & "'"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_KAMOKU_CD='" & p_KamokuCd & "'"
-	Else 
-		w_sSQL = ""
-		w_sSQL = w_sSQL & vbCrLf & " SELECT "
-		w_sSQL = w_sSQL & vbCrLf & "  M41_MEISYO AS KAMOKUMEI"
-		w_sSQL = w_sSQL & vbCrLf & " FROM M41_TOKUKATU"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "      M41_NENDO=" & cint(m_iNendo)
-		w_sSQL = w_sSQL & vbCrLf & "  AND M41_TOKUKATU_CD='" & p_KamokuCd & "'"
-	End If
 
         iRet = gf_GetRecordset(w_Rs, w_sSQL)
         If iRet <> 0 Then
@@ -631,17 +616,15 @@ End If
 			<td align="center">
 				<span class=msg2>
 				<%
-				'通常授業と特別活動で表示を変える
-				If m_TUKU_FLG = C_TUKU_FLG_TUJO Then
-					Select Case m_sSikenKBN
-						Case C_SIKEN_ZEN_TYU
-							%>※ 評価欄をクリックすると、評価の入力ができます。（○→・の順で表示されます）<br><%
-						Case C_SIKEN_KOU_TYU
-							%>※ 評価欄をクリックすると、評価の入力ができます。（○→◎→・の順で表示されます）<br><%
-						Case Else
-							response.write "<BR>"
-					End Select
-				End If
+				Select Case m_sSikenKBN
+					Case C_SIKEN_ZEN_TYU
+						%>※ 評価欄をクリックすると、評価の入力ができます。（○→・の順で表示されます）<br><%
+					Case C_SIKEN_KOU_TYU
+						%>※ 評価欄をクリックすると、評価の入力ができます。（○→◎→・の順で表示されます）<br><%
+					Case Else
+						response.write "<BR>"
+				End Select
+
 				%>
 				</span>
 				
@@ -657,10 +640,6 @@ End If
 				<table class="hyo" border="1" align="center" width="<%= gf_IIF(m_SchoolFlg,760,710) %>">
 					<tr>
 						<th class="header3" colspan="14" nowrap align="center">
-						<!--  コメント　削除対象
-							総授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtSouJyugyou" value="<%= Request("hidSouJyugyou") %>"><% Else %><%= Request("hidSouJyugyou") %><% End if%>　
-							純授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtJunJyugyou" value="<%= Request("hidJunJyugyou") %>"><% Else %><%= Request("hidJunJyugyou") %><% End if%>　　　
-							-->
 							<%
 							if m_SchoolFlg then
 								Call setHyokaType()
@@ -676,10 +655,7 @@ End If
 						<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
 						<th class="header3" rowspan="2" width="50"  nowrap >成績</th>
 						<th class="header3" rowspan="2" width="50"  nowrap>評価</th>
-						<!--  コメント　削除対象
-						<th class="header3" colspan="2" width="110" nowrap>遅刻</th>
-						<th class="header3" colspan="3" width="165" nowrap>欠課</th>
-						-->
+
 						<% if m_SchoolFlg then %>
 							<th class="header3" rowspan="2" width="50"  nowrap>評価<br>不能</th>
 						<% end if %>
