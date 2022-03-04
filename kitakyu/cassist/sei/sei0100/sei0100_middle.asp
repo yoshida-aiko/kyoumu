@@ -695,6 +695,7 @@ End If
 							<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
 							<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
 							<th class="header3" rowspan="2" width="50"  nowrap onClick="f_Paste('Seiseki')"><FONT COLOR="#99CCFF">成績</FONT></th>
+							<th class="header3" rowspan="2" width="50"  nowrap>前年度</th><%' 2022.03.04 再履修対応 Ins %>
 							<th class="header3" rowspan="2" width="50"  nowrap>評価</th>
 							<th class="header3" colspan="2" width="110" nowrap>遅刻</th>
 							<th class="header3" colspan="3" width="165" nowrap>欠課</th>
@@ -731,6 +732,7 @@ End If
 							<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
 							<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
 							<th class="header3" rowspan="2" width="50" nowrap onClick="f_Paste('Seiseki')"><FONT COLOR="#99CCFF">成績</FONT></th>
+							<th class="header3" rowspan="2" width="50"  nowrap>前年度</th><%' 2022.03.04 再履修対応 Ins %>
 							<th class="header3" rowspan="2" width="50" nowrap>評価</th>
 							<th class="header3" rowspan="2" width="100" nowrap onClick="f_Paste('Chikai')"><FONT COLOR="#99CCFF">遅刻</FONT></th>
 							<th class="header3" colspan="2" width="165" nowrap>欠課</th>

@@ -175,6 +175,10 @@ Sub Main()
 			'===============================
 			If f_GetSyukketu() <> 0 Then m_bErrFlg = True : Exit Do
 			
+			'===============================
+			'//TODOÅ@óØîNê∂éÊìæ2022/03/01 
+			'===============================
+
 		Else
 			'===============================
 			'//ê¨ê—ÅAäwê∂ÉfÅ[É^éÊìæ
@@ -417,18 +421,21 @@ Dim w_iNyuNendo
 				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_TYUKAN_Z as SOUJI, A.T16_JUNJIKAN_TYUKAN_Z as JYUNJI, "
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_Z as DataKbn ,"
+				w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 ãgìcÅ@çƒóöèCëŒâû
 				
 			Case C_SIKEN_ZEN_KIM
 				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_Z AS SEI,A.T16_KEKA_KIMATU_Z AS KEKA,A.T16_KEKA_NASI_KIMATU_Z AS KEKA_NASI,A.T16_CHIKAI_KIMATU_Z AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_Z AS HYOKAYOTEI, "
 				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_KIMATU_Z as SOUJI, A.T16_JUNJIKAN_KIMATU_Z as JYUNJI, "
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_Z as DataKbn,"
+				w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 ãgìcÅ@çƒóöèCëŒâû
 				
 			Case C_SIKEN_KOU_TYU
 				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_K AS SEI,A.T16_KEKA_TYUKAN_K AS KEKA,A.T16_KEKA_NASI_TYUKAN_K AS KEKA_NASI,A.T16_CHIKAI_TYUKAN_K AS CHIKAI,A.T16_HYOKAYOTEI_TYUKAN_K AS HYOKAYOTEI, "
 				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_TYUKAN_K as SOUJI, A.T16_JUNJIKAN_TYUKAN_K as JYUNJI, "
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_K as DataKbn,"
+				w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 ãgìcÅ@çƒóöèCëŒâû
 				
 			Case C_SIKEN_KOU_KIM
 				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_Z AS SEI_ZT,A.T16_KEKA_TYUKAN_Z AS KEKA_ZT,A.T16_KEKA_NASI_TYUKAN_Z AS KEKA_NASI_ZT,A.T16_CHIKAI_TYUKAN_Z AS CHIKAI_ZT,A.T16_HYOKAYOTEI_TYUKAN_Z AS HYOKAYOTEI_ZT, "
@@ -444,6 +451,7 @@ Dim w_iNyuNendo
 				w_sSQL = w_sSQL & "		A.T16_KOUSINBI_KIMATU_K,"
 
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_K as DataKbn,"
+				w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 ãgìcÅ@çƒóöèCëŒâû
 				
 		End Select
 		
@@ -452,8 +460,45 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_LEVEL_KYOUKAN "
 		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_OKIKAE_FLG "
 		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_KAISETU  AS KAISETU "	'//äJê›éûä˙í«â¡ Ins 2018/03/22 Nishimura
+		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_MENJYO_FLG AS Menjo "	'//INS 2022/03/04 ãgìcÅ@çƒóöèCëŒâû
 		w_sSQL = w_sSQL & " FROM "
 		w_sSQL = w_sSQL & " 	T16_RISYU_KOJIN A,T11_GAKUSEKI B,T13_GAKU_NEN C "
+		'INS 2022/03/02 ãgìcÅ@çƒóöèCëŒâû(óØîNé“ÇÃëOîNìxÇÃê¨ê—ÇéÊìæ) ST 
+		w_sSQL = w_sSQL & " 	 ,("
+		w_sSQL = w_sSQL & " 	 SELECT T13_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " 	   ,T13_RYUNEN_FLG"
+		w_sSQL = w_sSQL & " 	   ,T13_GAKUNEN"
+		w_sSQL = w_sSQL & " 	   ,T13_CLASS"	
+		w_sSQL = w_sSQL & " 	   ,T11_SIMEI"
+		w_sSQL = w_sSQL & " 	   ,M05_CLASSMEI"
+		w_sSQL = w_sSQL & " 	   ,T13_RYUNEN_FLG"
+		Select Case m_sSikenKBN
+			Case C_SIKEN_ZEN_TYU
+				w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_Z"
+			Case C_SIKEN_ZEN_KIM
+				w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_Z"	
+			Case C_SIKEN_KOU_TYU
+				w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_K"
+			Case C_SIKEN_KOU_KIM
+				w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_K"
+		End Select
+		w_sSQL = w_sSQL & "	 	  FROM "
+		w_sSQL = w_sSQL & " 	  	T11_GAKUSEKI "
+		w_sSQL = w_sSQL & " 	   ,T13_GAKU_NEN "
+		w_sSQL = w_sSQL & " 	   ,M05_CLASS "
+		w_sSQL = w_sSQL & " 	   ,T19_RISYURYUNEN_KOJIN "
+		w_sSQL = w_sSQL & "	 	  WHERE"
+		w_sSQL = w_sSQL & " 		T13_NENDO = " & Cint(m_iNendo) - 1 & " "
+		w_sSQL = w_sSQL & " 		AND	T13_RYUNEN_FLG = "  & C_RYUNEN_ON
+		w_sSQL = w_sSQL & "  		AND T11_GAKUSEI_NO = T13_GAKUSEI_NO "
+		w_sSQL = w_sSQL & "  		AND M05_NENDO = T13_NENDO "
+		w_sSQL = w_sSQL & "  		AND M05_GAKUNEN = T13_GAKUNEN "
+		w_sSQL = w_sSQL & "  		AND M05_CLASSNO = T13_CLASS "
+		w_sSQL = w_sSQL & "  		AND T13_NENDO = T19_NENDO "
+		w_sSQL = w_sSQL & "  		AND T13_GAKUSEI_NO = T19_GAKUSEI_NO "
+		w_sSQL = w_sSQL & "  		AND T19_KAMOKU_CD = '" & m_sKamokuCd & "' "
+		w_sSQL = w_sSQL & " 	 )D "
+		'INS 2022/03/02 ãgìcÅ@ED
 		w_sSQL = w_sSQL & " WHERE"
 		w_sSQL = w_sSQL & " 	A.T16_NENDO = " & Cint(m_iNendo) & " "
 		w_sSQL = w_sSQL & " AND	A.T16_KAMOKU_CD = '" & m_sKamokuCd & "' "
@@ -462,6 +507,7 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & " AND	C.T13_GAKUNEN = " & Cint(m_sGakuNo) & " "
 		w_sSQL = w_sSQL & " AND	C.T13_CLASS = " & Cint(m_sClassNo) & " "
 		w_sSQL = w_sSQL & " AND	A.T16_NENDO = C.T13_NENDO "
+		w_sSQL = w_sSQL & " AND	A.T16_GAKUSEI_NO = D.T13_GAKUSEI_NO(+) " 'INS 2022/03/02 ãgìcÅ@çƒóöèCëŒâû
 		
 		'//íuä∑å≥ÇÃê∂ìkÇÕÇÕÇ∏Ç∑(C_TIKAN_KAMOKU_MOTO = 1    'íuä∑å≥)
 		w_sSQL = w_sSQL & " AND	A.T16_OKIKAE_FLG <> " & C_TIKAN_KAMOKU_MOTO
@@ -472,7 +518,8 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & " 	) "
 
 		w_sSQL = w_sSQL & " ORDER BY A.T16_GAKUSEKI_NO "
-
+		'   response.write w_sSQL & "<BR>"
+		'   response.end
 		If gf_GetRecordset(m_Rs, w_sSQL) <> 0 Then
 			'⁄∫∞ƒﬁæØƒÇÃéÊìæé∏îs
 			f_getdate = 99
@@ -1746,6 +1793,9 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
+					<%' 2022.03.04 çƒóöèCëŒâû Ins ST%>
+					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
+					<%' 2022.03.04 çƒóöèCëŒâû Ins ED%>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
@@ -1764,6 +1814,9 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
+					<%' 2022.03.04 çƒóöèCëŒâû Ins ST%>
+					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
+					<%' 2022.03.04 çƒóöèCëŒâû Ins ED%>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="100" nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="80"  nowrap <%=w_Padding%>>-</td>
@@ -1824,10 +1877,20 @@ if (w_KekkaGai){		//2001/12/17 Add
 					%>
 				<%If m_iKikan <> "NO" Then%>
 					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
-							
-						<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
-							<input type="text" <%=w_sInputClass1%> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
-						</td>
+						<%' 2022.03.04 çƒóöèCëŒâû UPD ST%>
+						<%' ñ∆èúÉtÉâÉOÇ™óßÇ¡ÇƒÇ¢ÇÍÇŒÅAï∂éöÇ∆ÇµÇƒï\é¶--%>
+						<% If CInt(gf_SetNull2Zero(m_Rs("Menjo"))) = 1 Then %>
+							<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>><font size="2"><%=w_sSeiseki%></font></td>
+						<%Else%>
+							<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
+								<input type="text" <%=w_sInputClass1%> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
+							</td>
+						<%End If%>
+						<%' 2022.03.04 çƒóöèCëŒâû UPD ED%>
+
+						<%' 2022.03.04 çƒóöèCëŒâû Ins ST%>
+						<td class="<%=w_cell%>" align="center" width="50" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoSeiseki"))%></td>
+						<%' 2022.03.04 çƒóöèCëŒâû Ins ED%>
 						
 						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
 								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>>
@@ -1846,6 +1909,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
 					<%Else%>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
+							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>	<%'-- 2022.03.04 çƒóöèCëŒâû Ins-- %>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
 							<td class="<%=w_cell%>" width="100" nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="80"  nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
@@ -1855,11 +1919,17 @@ if (w_KekkaGai){		//2001/12/17 Add
 				<%Else%>
 					
 					<%If m_TUKU_FLG = C_TUKU_FLG_TUJO Then%>
-							
-						<td class="<%=w_cell%>" width="50" align="right" nowrap <%=w_Padding%>>
-							<input type="text" <%= w_sInputClass1 %> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
-						</td>
-						
+						<%' 2022.03.04 çƒóöèCëŒâû UPD ST%>
+						<%' ñ∆èúÉtÉâÉOÇ™óßÇ¡ÇƒÇ¢ÇÍÇŒÅAï∂éöÇ∆ÇµÇƒï\é¶--%>
+						<% If CInt(gf_SetNull2Zero(m_Rs("Menjo"))) = 1 Then %>
+							<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>><font size="2"><%=w_sSeiseki%></font></td>
+						<%Else%>
+							<td class="<%=w_cell%>" width="50" align="right" nowrap <%=w_Padding%>>
+								<input type="text" <%= w_sInputClass1 %> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
+							</td>
+						<%End If%>
+						<%' 2022.03.04 çƒóöèCëŒâû UPD ED%>
+
 						<%	'ï\é¶ÇÃÇ›ÇÃèÍçáÇÃçáåvÅEïΩãœílÇãÅÇﬂÇÈ
 							If IsNull(w_sSeiseki) = False Then
 								If IsNumeric(CStr(w_sSeiseki)) = True Then
@@ -1868,6 +1938,9 @@ if (w_KekkaGai){		//2001/12/17 Add
 								End If
 							End If
 						%>
+						<%' 2022.03.04 çƒóöèCëŒâû Ins ST%>
+						<td class="<%=w_cell%>" align="center" width="50" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoSeiseki"))%></td>
+						<%' 2022.03.04 çƒóöèCëŒâû Ins ED%>
 						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
 								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
 						<%Else%>
@@ -1880,6 +1953,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
 					<%Else%>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
+						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>	<%'-- 2022.03.04 çƒóöèCëŒâû Ins-- %>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
 						<td class="<%=w_cell%>" width="100" align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="80"  align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
