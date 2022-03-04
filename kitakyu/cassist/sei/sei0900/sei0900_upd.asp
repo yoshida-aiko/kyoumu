@@ -22,9 +22,11 @@
 <%
 '/////////////////////////// ﾓｼﾞｭｰﾙCONST /////////////////////////////
     Const DebugPrint = 0
+    Public Const C_GOUKAKUTEN = 60  '合格点
 '/////////////////////////// ﾓｼﾞｭｰﾙ変数 /////////////////////////////
     'エラー系
     Public  m_bErrFlg           'ｴﾗｰﾌﾗｸﾞ
+    Public  m_Rs_Hyoka			'評価情報
 	
     '取得したデータを持つ変数
     Dim     m_sKyokanCd     '//教官CD
@@ -37,6 +39,8 @@
     Dim     m_SchoolFlg
     Dim     m_SQL
     Dim     hidSeiseki
+    Dim     m_iRisyuKakoNendo   '//過年度 
+    Dim     m_iHaitotani   '//配当単位
 '///////////////////////////メイン処理/////////////////////////////
 
     'ﾒｲﾝﾙｰﾁﾝ実行
@@ -74,6 +78,8 @@ Sub Main()
 	i_max           = request("i_Max")
 	m_sGakuNo	    = Cint(request("txtGakuNo"))	'//学年
 	m_sGakkaCd	    = request("txtGakkaCd")			'//学科
+    m_iRisyuKakoNendo =  request("txtRisyuKakoNendo")
+    m_iHaitotani =  request("txtHaitoTani")
 
     Do
         '// ﾃﾞｰﾀﾍﾞｰｽ接続
@@ -85,11 +91,12 @@ Sub Main()
             Exit Do
         End If
 
-	'// 不正アクセスチェック
-	Call gf_userChk(session("PRJ_No"))
+        '// 不正アクセスチェック
+        Call gf_userChk(session("PRJ_No"))
 		
 		'// 成績登録
         w_iRet = f_Update(m_sSikenKBN)
+
         If w_iRet <> 0 Then
             m_bErrFlg = True
             Exit Do
@@ -132,35 +139,23 @@ Dim w_Sisekiarray
 	w_DataKbnFlg = false
 	w_DataKbn = 0
     w_Sisekiarray = split(Trim(request("hidSeiseki")),",")
-    'response.write  "w_Sisekiarray0:" & w_Sisekiarray(0)
-    ' response.end
+    ' response.write  "w_Sisekiarray0:" & w_Sisekiarray(0)
+
     Do 
 		w_Today = gf_YYYY_MM_DD(m_iNendo & "/" & month(date()) & "/" & day(date()),"/")
 		
 		m_SchoolFlg = cbool(request("hidSchoolFlg"))
 		
-		'// 減算区分取得(sei0900_upd_func.asp内関数)
-		If Not Incf_SelGenzanKbn() Then Exit Function
-		
-		'// 欠課・欠席設定取得(sei0900_upd_func.asp内関数)
-		If Not Incf_SelM15_KEKKA_KESSEKI() then Exit Function
-		
-		'// 累積区分取得(sei0900_upd_func.asp内関数)
-		If Not Incf_SelKanriMst(m_iNendo,C_K_KEKKA_RUISEKI) then Exit Function
+        '// 科目評価取得
+        w_iRet = f_GetKamokuTensuHyoka(m_iRisyuKakoNendo,m_sKamokuCd)
+        If w_iRet<> 0 Then
+            Exit Do
+        End If
 
 		For i=1 to i_max : Do
             '成績が否の場合は、次の学生へ
             if w_Sisekiarray(i-1) = 2 then Exit Do
-
-			'//実授業時間取得(sei0900_upd_func.asp内関数)
-			Call Incs_GetJituJyugyou(i)
-			
-			'//学期末の場合、最低時間を取得する
-			if cInt(m_sSikenKBN) = C_SIKEN_KOU_KIM then
-				'//最低時間取得(sei0900_upd_func.asp内関数)
-				If Not Incf_GetSaiteiJikan(i) then Exit Function
-			End if
-			
+			       
 			if m_SchoolFlg = true then
 				w_DataKbn = 0
 				w_DataKbnFlg = false
@@ -177,28 +172,31 @@ Dim w_Sisekiarray
 					end if
 				end if
 			end if
-			
-			'//T16_RISYU_KOJINにUPDATE
+
+			'//T17_RISYUKAKO_KOJINにUPDATE
 			w_sSQL = ""
-			w_sSQL = w_sSQL & vbCrLf & " UPDATE T16_RISYU_KOJIN SET "
-			' w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = " & C_GOUKAKUTEN  & ","
-			w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = 60,"
-            w_sSQL = w_sSQL & vbCrLf & "   T16_UPD_DATE = '" & gf_YYYY_MM_DD(date(),"/") & "', "
-            w_sSQL = w_sSQL & vbCrLf & "   T16_UPD_USER = '"  & Trim(Session("LOGIN_ID")) & "' "
+			w_sSQL = w_sSQL & vbCrLf & " UPDATE T17_RISYUKAKO_KOJIN SET "
+			w_sSQL = w_sSQL & vbCrLf & "   T17_SEI_KIMATU_K = " & C_GOUKAKUTEN  & ","
+            w_sSQL = w_sSQL & vbCrLf & "   T17_HYOKA_KIMATU_K = '" &  m_Rs_Hyoka("M08_HYOKA_SYOBUNRUI_MEI")  & "',"
+            w_sSQL = w_sSQL & vbCrLf & "   T17_GPA_KIMATU_K = " & m_Rs_Hyoka("M08_HYOTEN_GPA")   & ","
+            w_sSQL = w_sSQL & vbCrLf & "   T17_TANI_SUMI = " & m_iHaitotani  & ","
+            w_sSQL = w_sSQL & vbCrLf & "   T17_KOUSINBI_KIMATU_K = '" & gf_YYYY_MM_DD(date(),"/") & "',"
+            w_sSQL = w_sSQL & vbCrLf & "   T17_UPD_DATE = '" & gf_YYYY_MM_DD(date(),"/") & "', "
+            w_sSQL = w_sSQL & vbCrLf & "   T17_UPD_USER = '"  & Trim(Session("LOGIN_ID")) & "' "
             w_sSQL = w_sSQL & vbCrLf & " WHERE "
-            w_sSQL = w_sSQL & vbCrLf & "        T16_NENDO = " & Cint(m_iNendo) & " "
-            w_sSQL = w_sSQL & vbCrLf & "    AND T16_GAKUSEI_NO = '" & Trim(request("txtGseiNo"&i)) & "'  "
-            w_sSQL = w_sSQL & vbCrLf & "    AND T16_KAMOKU_CD = '" & Trim(m_sKamokuCd) & "'  "
+            w_sSQL = w_sSQL & vbCrLf & "        T17_NENDO = " & Cint(m_iRisyuKakoNendo) & " "
+            w_sSQL = w_sSQL & vbCrLf & "    AND T17_GAKUSEI_NO = '" & Trim(request("txtGseiNo"&i)) & "'  "
+            w_sSQL = w_sSQL & vbCrLf & "    AND T17_KAMOKU_CD = '" & Trim(m_sKamokuCd) & "'  "
 
             If gf_ExecuteSQL(w_sSQL) <> 0 Then
                 '//ﾛｰﾙﾊﾞｯｸ
                 msMsg = Err.description
                 Exit Do
             End If
-            ' response.write  "txtGseiNo:" & Trim(request("txtGseiNo"&i)) & "<BR>"
-            ' response.write w_sSQL & "<BR>"
+        ' response.write w_sSQL & "<BR>"
+        '   response.end
 	    Loop Until 1: Next
-		'response.end
+		' response.end
         '//正常終了
         f_Update = 0
 
@@ -224,12 +222,48 @@ Function f_CnvNumNull(p_vAtai)
 End Function
 
 '********************************************************************************
-'*  [機能]  試験区分が前期期末の時は、その科目が前期のみか通年かを調べる
-'*  [引数]  なし
+'*  [機能]  科目評価取得
+'*  [引数]  値
 '*  [戻値]  なし
 '*  [説明]  
 '********************************************************************************
-Function f_SikenInfo(p_bZenkiOnly)
+Function f_GetKamokuTensuHyoka(p_iNendo,p_sKamokuCD)
+
+    f_GetKamokuTensuHyoka = 1
+    Dim w_iZokuseiCD         '科目属性
+    Dim w_iHyokaNo
+    Dim w_iRet
+
+    ' 科目属性取得
+	w_iRet = f_GetKamokuZokusei(p_iNendo,p_sKamokuCD,w_iZokuseiCD)
+    If w_iRet<> 0 Then
+            Exit Function
+    End If
+    
+    '科目属性から評価NO取得
+    w_iRet = f_iGetHyokaNo(p_iNendo,w_iZokuseiCD,w_iHyokaNo) 
+    If w_iRet<> 0 Then
+            Exit Function
+    End If
+    
+    '評価NOから評価データ取得
+    w_iRet = f_GetTensuHyoka(p_iNendo,w_iZokuseiCD,C_GOUKAKUTEN) 
+    If w_iRet<> 0 Then
+            Exit Function
+    End If
+
+    f_GetKamokuTensuHyoka = 0
+End Function
+
+'********************************************************************************
+'*  [機能]  科目属性取得(通常時)
+'*  [引数]  p_iNendo - 年度(IN)
+'        　 p_sKamokuCD - 科目コード(IN)
+'           p_iZokuseiCD - 属性コード(OUT)
+'*  [戻値]   
+'*  [説明]  
+'********************************************************************************
+Function f_GetKamokuZokusei(p_iNendo,p_sKamokuCD, p_iZokuseiCD)
     Dim w_sSQL
     Dim w_Rs
     Dim w_iRet
@@ -237,40 +271,145 @@ Function f_SikenInfo(p_bZenkiOnly)
     On Error Resume Next
     Err.Clear
     
-    f_SikenInfo = 1
+    f_GetKamokuZokusei = 1
 	p_bZenkiOnly = false
 
     Do 
 
-'		'//試験区分が前期期末の時は、その科目が前期のみか通年かを調べる
+'		'//科目属性取得
 		w_sSQL = ""
 		w_sSQL = w_sSQL & vbCrLf & " SELECT "
- 		w_sSQL = w_sSQL & vbCrLf & " T15_RISYU.T15_KAMOKU_CD"
-		w_sSQL = w_sSQL & vbCrLf & " FROM T15_RISYU"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "  T15_RISYU.T15_NYUNENDO=" & Cint(m_iNendo)-cint(m_sGakuNo)+1
-		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_GAKKA_CD='" & m_sGakkaCd & "'"
-		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_KAMOKU_CD='" & Trim(m_sKamokuCd) & "'" 
-		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_KAISETU" & m_sGakuNo & "=" & C_KAI_ZENKI	'//前期開設
+ 		w_sSql = w_sSql & vbCrLf & " M03_ZOKUSEI_CD"
+        w_sSql = w_sSql & vbCrLf & " FROM"
+        w_sSql = w_sSql & vbCrLf & " M03_KAMOKU"
+        w_sSql = w_sSql & vbCrLf & " WHERE "
+		w_sSQL = w_sSQL & vbCrLf & " M03_NENDO=" & Cint(p_iNendo)
+		w_sSQL = w_sSQL & vbCrLf & " AND M03_KAMOKU_CD='" & Trim(m_sKamokuCd) & "'" 
 
         iRet = gf_GetRecordset(w_Rs, w_sSQL)
         If iRet <> 0 Then
             'ﾚｺｰﾄﾞｾｯﾄの取得失敗
             msMsg = Err.description
-            f_SikenInfo = 99
+            f_GetKamokuZokusei = 99
             Exit Do
         End If
 
 		'//戻り値ｾｯﾄ
 		If w_Rs.EOF = False Then
-			p_bZenkiOnly = True
+			p_iZokuseiCD = w_Rs("M03_ZOKUSEI_CD")
 		End If
 
-        f_SikenInfo = 0
+        f_GetKamokuZokusei = 0
         Exit Do
     Loop
 
     Call gf_closeObject(w_Rs)
+
+End Function
+
+'********************************************************************************
+'*  [機能]  評価形式Noを取得する
+'*  [引数]  p_iNendo - 年度(IN)
+'           p_iKamokuZokusei_CD - 科目属性コード(IN)
+'           p_iHYOKA_NO - 評価形式No(OUT)
+'*  [戻値]   
+'*  [説明]  
+'********************************************************************************
+Function f_iGetHyokaNo(p_iNendo,p_iKamokuZokusei_CD,p_iHYOKA_NO)
+    Dim w_sSQL
+    Dim w_Rs
+    Dim w_iRet
+
+    On Error Resume Next
+    Err.Clear
+    
+    f_iGetHyokaNo = 1
+	p_bZenkiOnly = false
+
+    Do 
+
+'		'//評価形式Noを取得
+		w_sSQL = ""
+		w_sSQL = w_sSQL & vbCrLf & " SELECT "
+ 		w_sSql = w_sSql & vbCrLf & " M100_HYOUKA_NO"
+        w_sSql = w_sSql & vbCrLf & " FROM"
+        w_sSql = w_sSql & vbCrLf & " M100_KAMOKU_ZOKUSEI"
+        w_sSql = w_sSql & vbCrLf & " WHERE "
+		w_sSQL = w_sSQL & vbCrLf & " M100_NENDO=" & Cint(p_iNendo)
+		w_sSQL = w_sSQL & vbCrLf & " AND M100_ZOKUSEI_CD='" & Trim(p_iKamokuZokusei_CD) & "'" 
+
+        iRet = gf_GetRecordset(w_Rs, w_sSQL)
+        If iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            msMsg = Err.description
+            f_iGetHyokaNo = 99
+            Exit Do
+        End If
+
+		'//戻り値ｾｯﾄ
+		If w_Rs.EOF = False Then
+			p_iHYOKA_NO = w_Rs("M100_HYOUKA_NO")
+		End If
+
+        f_iGetHyokaNo = 0
+        Exit Do
+    Loop
+
+    Call gf_closeObject(w_Rs)
+
+End Function
+
+'********************************************************************************
+'*  [機能]  科目評価取得(評価=可のデータ)
+'*  [引数]  p_iNendo - 年度(IN)
+'           p_iKamokuZokusei_CD - 科目属性コード(IN)
+'           p_iHYOKA_NO - 評価形式No(OUT)
+'*  [戻値]   
+'*  [説明]  
+'********************************************************************************
+Function f_GetTensuHyoka(p_iNendo,p_iHYOKA_NO,p_iTensu)
+    Dim w_sSQL
+    Dim w_Rs
+    Dim w_iRet
+
+    On Error Resume Next
+    Err.Clear
+    
+    f_GetTensuHyoka = 1
+	p_bZenkiOnly = false
+
+    Do 
+
+'		'//評価形式Noを取得
+		w_sSQL = ""
+		w_sSQL = w_sSQL & vbCrLf & " SELECT "
+ 		w_sSql = w_sSql & vbCrLf & " M08_HYOKA_SYOBUNRUI_MEI,"
+        w_sSql = w_sSql & vbCrLf & " M08_HYOTEI,"
+        w_sSql = w_sSql & vbCrLf & " M08_HYOKA_SYOBUNRUI_RYAKU,"
+        w_sSql = w_sSql & vbCrLf & " M08_HYOTEN_GPA"
+        w_sSql = w_sSql & vbCrLf & " FROM"
+        w_sSql = w_sSql & vbCrLf & " M08_HYOKAKEISIKI"
+        w_sSql = w_sSql & vbCrLf & " WHERE "
+		w_sSQL = w_sSQL & vbCrLf & " M08_NENDO=" & Cint(p_iNendo)
+		w_sSQL = w_sSQL & vbCrLf & " AND M08_HYOUKA_NO='" & p_iHYOKA_NO & "'" 
+        w_sSQL = w_sSQL & vbCrLf & " AND M08_MIN <= '" & p_iTensu & "'" 
+        w_sSQL = w_sSQL & vbCrLf & " AND M08_MAX >= '" & p_iTensu & "'" 
+        w_sSQL = w_sSQL & vbCrLf & " AND M08_HYOKA_TAISYO_KBN ='" & C_HYOKA_TAISHO_IPPAN & "'" 
+
+' response.write w_sSQL
+'response.end
+        iRet = gf_GetRecordset(m_Rs_Hyoka, w_sSQL)
+        If iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            msMsg = Err.description
+            f_GetTensuHyoka = 99
+            Exit Do
+        End If
+
+        '//正常終了
+        f_GetTensuHyoka = 0
+        Exit Do
+    Loop
 
 End Function
 
@@ -313,14 +452,12 @@ Sub showPage()
     </head>
     <body LANGUAGE=javascript onload="return window_onload()">
     <form name="frm" method="post">
-
 	<input type=hidden name=txtNendo    value="<%=trim(Request("txtNendo"))%>">
 	<input type=hidden name=txtKyokanCd value="<%=trim(Request("txtKyokanCd"))%>">
 	<input type=hidden name=txtSikenKBN value="<%=trim(Request("txtSikenKBN"))%>">
-	<input type=hidden name=txtGakuNo   value="<%=trim(Request("txtGakuNo"))%>">
-	<input type=hidden name=txtClassNo  value="<%=trim(Request("txtClassNo"))%>">
 	<input type=hidden name=txtKamokuCd value="<%=trim(Request("txtKamokuCd"))%>">
-	<input type=hidden name=txtGakkaCd  value="<%=trim(Request("txtGakkaCd"))%>">
+    <input type="hidden" name="txtKamokuNM" value="<%=trim(Request("txtKamokuNM"))%>"">
+    <input type="hidden" name="txtRisyuKakoNendo" value="<%=m_iRisyuKakoNendo%>">
 
     </form>
     </center>

@@ -45,6 +45,7 @@
 	Dim		m_rCnt			'レコードカウント
     Public m_sGakkaCd
 	Public m_TUKU_FLG		'通常授業フラグ
+	Public m_iRisyuKakoNendo'過年度
 	
     Public m_sGakuNo_s		'学年
     Public m_sGakkaCd_s		'学科
@@ -140,10 +141,14 @@ Sub Main()
 			m_iKikan = "NO"	'成績入力期間外の場合は、表示のみ
 		End If
 
-		if not f_GetUpdateDate(m_iNendo,m_sKamokuCd,m_sSikenKBN,m_TUKU_FLG,m_sFirstGakusekiNo,m_UpdateDate) then
+		'===============================
+		'//最新更新日を取得
+		'===============================
+		'//クラスの学年末成績を最後に更新した日を取得
+		If f_GetUpdateDate(m_UpdateDate) <> 0 Then 
 			m_bErrFlg = True
 			Exit Do
-		end if
+		End If
 		
 		'// ページを表示
 		Call showPage()
@@ -171,10 +176,11 @@ Sub s_SetParam()
 	m_iNendo	= request("txtNendo")
 	m_sKyokanCd	= request("txtKyokanCd")
 	m_sSikenKBN	= Cint(request("txtSikenKBN"))
-	m_sGakuNo	= Cint(request("txtGakuNo"))
-	m_sClassNo	= Cint(request("txtClassNo"))
+	' m_sGakuNo	= Cint(request("txtGakuNo"))
+	' m_sClassNo	= Cint(request("txtClassNo"))
 	m_sKamokuCd	= request("txtKamokuCd")
 	m_sKamokuNM	= request("txtKamokuNM")
+	m_iRisyuKakoNendo = request("txtRisyuKakoNendo")
 	m_sGakkaCd	= request("txtGakkaCd")
 	m_TUKU_FLG	= request("txtTUKU_FLG")
 
@@ -204,7 +210,7 @@ Function f_Nyuryokudate()
 	On Error Resume Next
 	Err.Clear
 	f_Nyuryokudate = 1
-	m_bKekkaNyuryokuFlg = False
+	' m_bKekkaNyuryokuFlg = False
 
 	Do
 
@@ -212,8 +218,8 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & " SELECT "
 		w_sSQL = w_sSQL & vbCrLf & "  T24_SIKEN_NITTEI.T24_SEISEKI_KAISI "
 		w_sSQL = w_sSQL & vbCrLf & "  ,T24_SIKEN_NITTEI.T24_SEISEKI_SYURYO"
-		w_sSQL = w_sSQL & vbCrLf & "  ,T24_SIKEN_NITTEI.T24_KEKKA_KAISI "
-		w_sSQL = w_sSQL & vbCrLf & "  ,T24_SIKEN_NITTEI.T24_KEKKA_SYURYO "
+		' w_sSQL = w_sSQL & vbCrLf & "  ,T24_SIKEN_NITTEI.T24_KEKKA_KAISI "
+		' w_sSQL = w_sSQL & vbCrLf & "  ,T24_SIKEN_NITTEI.T24_KEKKA_SYURYO "
 		w_sSQL = w_sSQL & vbCrLf & "  ,M01_KUBUN.M01_SYOBUNRUIMEI "
 		w_sSQL = w_sSQL & vbCrLf & "  ,SYSDATE "
 		w_sSQL = w_sSQL & vbCrLf & " FROM "
@@ -224,13 +230,10 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_NENDO = T24_SIKEN_NITTEI.T24_NENDO"
 		w_sSQL = w_sSQL & vbCrLf & "  AND M01_KUBUN.M01_DAIBUNRUI_CD=" & cint(C_SIKEN)
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_NENDO=" & Cint(m_iNendo)
-		' コメント　UPD
-		' w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & Cint(m_sSikenKBN)
-		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & C_SIKEN_SAISI
-		' コメント　UPD
+		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_KBN=" & C_SIKEN_KARISINKYU
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_CD='0'"
-		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_GAKUNEN=" & Cint(m_sGakuNo)
-		
+		w_sSQL = w_sSQL & vbCrLf & "  AND rownum <= 1 "
+
 		w_iRet = gf_GetRecordset(m_DRs, w_sSQL)
 		If w_iRet <> 0 Then
 			'ﾚｺｰﾄﾞｾｯﾄの取得失敗
@@ -247,8 +250,8 @@ Function f_Nyuryokudate()
 			m_sSikenNm = gf_SetNull2String(m_DRs("M01_SYOBUNRUIMEI"))		'試験名称
 			m_iNKaishi = gf_SetNull2String(m_DRs("T24_SEISEKI_KAISI"))		'成績入力開始日
 			m_iNSyuryo = gf_SetNull2String(m_DRs("T24_SEISEKI_SYURYO"))		'成績入力終了日
-			m_iKekkaKaishi = gf_SetNull2String(m_DRs("T24_KEKKA_KAISI"))	'欠課入力開始
-			m_iKekkaSyuryo = gf_SetNull2String(m_DRs("T24_KEKKA_SYURYO"))	'欠課入力終了
+			' m_iKekkaKaishi = gf_SetNull2String(m_DRs("T24_KEKKA_KAISI"))	'欠課入力開始
+			' m_iKekkaSyuryo = gf_SetNull2String(m_DRs("T24_KEKKA_SYURYO"))	'欠課入力終了
 			w_sSysDate = Left(gf_SetNull2String(m_DRs("SYSDATE")),10)		'システム日付
 		End If
 
@@ -257,10 +260,10 @@ Function f_Nyuryokudate()
 			f_Nyuryokudate = 0
 		End If
 
-		'欠課入力可能ﾌﾗｸﾞ
-		If gf_YYYY_MM_DD(m_iKekkaKaishi,"/") <= gf_YYYY_MM_DD(w_sSysDate,"/") And gf_YYYY_MM_DD(m_iKekkaSyuryo,"/") >= gf_YYYY_MM_DD(w_sSysDate,"/") Then
-			m_bKekkaNyuryokuFlg = True
-		End If
+		' '欠課入力可能ﾌﾗｸﾞ
+		' If gf_YYYY_MM_DD(m_iKekkaKaishi,"/") <= gf_YYYY_MM_DD(w_sSysDate,"/") And gf_YYYY_MM_DD(m_iKekkaSyuryo,"/") >= gf_YYYY_MM_DD(w_sSysDate,"/") Then
+		' 	m_bKekkaNyuryokuFlg = True
+		' End If
 
 		Exit Do
 	Loop
@@ -288,24 +291,15 @@ Function f_GetKamokuName(p_Gakunen,p_GakkaCd,p_KamokuCd)
 	
     Do 
 
-	If m_TUKU_FLG = C_TUKU_FLG_TUJO Then '通常授業と特別活動で取り先を変える。
-		w_sSQL = ""
-		w_sSQL = w_sSQL & vbCrLf & " SELECT "
-		w_sSQL = w_sSQL & vbCrLf & "  T15_RISYU.T15_KAMOKUMEI AS KAMOKUMEI"
-		w_sSQL = w_sSQL & vbCrLf & " FROM T15_RISYU"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "      T15_RISYU.T15_NYUNENDO=" & cint(m_iNendo) - cint(p_Gakunen) + 1
-		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_GAKKA_CD='" & p_GakkaCd & "'"
-		w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_KAMOKU_CD='" & p_KamokuCd & "'"
-	Else 
-		w_sSQL = ""
-		w_sSQL = w_sSQL & vbCrLf & " SELECT "
-		w_sSQL = w_sSQL & vbCrLf & "  M41_MEISYO AS KAMOKUMEI"
-		w_sSQL = w_sSQL & vbCrLf & " FROM M41_TOKUKATU"
-		w_sSQL = w_sSQL & vbCrLf & " WHERE "
-		w_sSQL = w_sSQL & vbCrLf & "      M41_NENDO=" & cint(m_iNendo)
-		w_sSQL = w_sSQL & vbCrLf & "  AND M41_TOKUKATU_CD='" & p_KamokuCd & "'"
-	End If
+	w_sSQL = ""
+	w_sSQL = w_sSQL & vbCrLf & " SELECT "
+	w_sSQL = w_sSQL & vbCrLf & "  T15_RISYU.T15_KAMOKUMEI AS KAMOKUMEI"
+	w_sSQL = w_sSQL & vbCrLf & " FROM T15_RISYU"
+	w_sSQL = w_sSQL & vbCrLf & " WHERE "
+	w_sSQL = w_sSQL & vbCrLf & "      T15_RISYU.T15_NYUNENDO=" & cint(m_iNendo) - cint(p_Gakunen) + 1
+	w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_GAKKA_CD='" & p_GakkaCd & "'"
+	w_sSQL = w_sSQL & vbCrLf & "  AND T15_RISYU.T15_KAMOKU_CD='" & p_KamokuCd & "'"
+	
 
         iRet = gf_GetRecordset(w_Rs, w_sSQL)
         If iRet <> 0 Then
@@ -373,86 +367,70 @@ Function f_LevelChk(p_Gakunen,p_KamokuCd)
     Call gf_closeObject(w_Rs)
 End Function
 
-'*******************************************************************************
-' 機　　能：選んだ試験区分,科目の更新日を取得する
-' 
-' 返　　値：
-' 　　　　　(True)成功, (False)失敗
-' 引　　数：p_sSikenKbn			- 試験区分
-' 　　　　　p_Nendo				- 年度
-' 　　　　　p_KamokuCd			- 科目コード
-'			p_FirstGakusekiNo	- 学籍NO
-'			p_TUKU_FLG			- 科目区分(0:通常、1:特活)
-'			(戻り値)p_UpdateDate - 科目実績登録の更新日
-' 機能詳細：
-' 備　　考：
-' old_ver → gf_GetT16UpdDate(m_iNendo,m_sGakuNo_s,m_sGakkaCd_s,m_sKamokuCd_s,"")
-'*******************************************************************************
-function f_GetUpdateDate(p_Nendo,p_KamokuCd,p_ShikenKbn,p_TUKU_FLG,p_FirstGakusekiNo,p_UpdateDate)
+'********************************************************************************
+'*  [機能]  最終更新日の取得
+'*  [引数]  なし
+'*  [戻値]  最終更新日
+'*  [説明]  
+'********************************************************************************
+Function f_GetUpdateDate(p_UpdateDate)
+
+    Dim w_sSQL
+    Dim w_Rs
+    Dim w_iRet
+
+    On Error Resume Next
+    Err.Clear
+    
+    f_GetUpdateDate = 1
+
+    Do 
+
+		w_sSQL = ""
+		w_sSQL = w_sSQL & vbCrLf & " SELECT "
+		w_sSQL = w_sSQL & vbCrLf & "  MAX(T17_KOUSINBI_KIMATU_K)"
+		w_sSQL = w_sSQL & " FROM "
+		w_sSQL = w_sSQL & " 	T17_RISYUKAKO_KOJIN A,T11_GAKUSEKI B,T13_GAKU_NEN C "
+		w_sSQL = w_sSQL & " WHERE"
+		w_sSQL = w_sSQL & " 	A.T17_NENDO = " & Cint(m_iRisyuKakoNendo) & " "
+		w_sSQL = w_sSQL & " AND	A.T17_KAMOKU_CD = '" & m_sKamokuCd & "' "
+		w_sSQL = w_sSQL & " AND	A.T17_GAKUSEI_NO = B.T11_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " AND	A.T17_GAKUSEI_NO = C.T13_GAKUSEI_NO "
+		w_sSQL = w_sSQL & " AND	A.T17_NENDO = C.T13_NENDO "
+
+		'//置換元の生徒ははずす(C_TIKAN_KAMOKU_MOTO = 1    '置換元)
+		w_sSQL = w_sSQL & " AND	A.T17_OKIKAE_FLG <> " & C_TIKAN_KAMOKU_MOTO
+
+		'//必修か選択科目のうち選択している学生のみを取得する		'INS 2019/03/06 藤林
+		w_sSQL = w_sSQL & " AND	( T17_HISSEN_KBN = " & C_HISSEN_HIS
+		w_sSQL = w_sSQL & "       OR (T17_HISSEN_KBN = " & C_HISSEN_SEN & " AND T17_SELECT_FLG = 1) "
+		w_sSQL = w_sSQL & " 	) "
+		w_sSQL = w_sSQL & " AND T17_HYOKA_FUKA_KBN NOT IN(" & C_HYOKA_FUKA_KEKKA &  "," & C_HYOKA_FUKA_BOTH & ") "
 	
-	Dim w_Sql,w_Rs
-	Dim w_ShikenType
-	Dim w_Table
-	Dim w_TableName
-	Dim w_KamokuName
-	
-	On Error Resume Next
-	Err.Clear
-	
-	f_GetUpdateDate = false
-	
-	if cint(p_TUKU_FLG) = cint(C_TUKU_FLG_TUJO) then
-		w_Table = "T16"
-		w_TableName = "T16_RISYU_KOJIN"
-		w_KamokuName = "T16_KAMOKU_CD"
-	else
-		w_Table = "T34"
-		w_TableName = "T34_RISYU_TOKU"
-		w_KamokuName = "T34_TOKUKATU_CD"
-	end if
-	
-	select case cint(p_ShikenKbn)
+        iRet = gf_GetRecordset(w_Rs, w_sSQL)
+        If iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            msMsg = Err.description
+            f_GetUpdateDate = 99
+            Exit Do
+        End If
 		
-		case C_SIKEN_ZEN_TYU '前期中間試験
-			w_ShikenType = w_Table & "_KOUSINBI_TYUKAN_Z"
-			
-		case C_SIKEN_ZEN_KIM '前期期末試験
-			w_ShikenType = w_Table & "_KOUSINBI_KIMATU_Z"
-			
-		case C_SIKEN_KOU_TYU '後期中間試験
-			w_ShikenType = w_Table & "_KOUSINBI_TYUKAN_K"
-			
-		case C_SIKEN_KOU_KIM '後期期末試験
-			w_ShikenType = w_Table & "_KOUSINBI_KIMATU_K"
-			
-		case else
-			exit function
-			
-	end select
-	
-	w_Sql = ""
-	w_Sql = w_Sql & " select "
-	w_Sql = w_Sql & " 		" & w_ShikenType
-	w_Sql = w_Sql & " from "
-	w_Sql = w_Sql & " 		" & w_TableName
-	w_Sql = w_Sql & " where "
-	w_Sql = w_Sql & " 		" & w_Table & "_GAKUSEKI_NO= '"   & p_FirstGakusekiNo   & "' "
-	w_Sql = w_Sql & " and	" & w_Table & "_NENDO = " & p_Nendo
-	w_Sql = w_Sql & " and	" & w_KamokuName & "= '"   & p_KamokuCd   & "' "
-	
-' response.write "w_Sql:" &  w_Sql & "<BR>"
+		' response.write "w_sSQL:" & w_sSQL & "<BR>"
+		' response.end
+		'//戻り値ｾｯﾄ
+		If w_Rs.EOF = False Then
+			p_UpdateDate = w_Rs("MAX(T17_KOUSINBI_KIMATU_K)")
+		End If
+		' response.write "p_UpdateDate" & p_UpdateDate & "<BR>"
 
-	If gf_GetRecordset(w_Rs,w_Sql) <> 0 Then
-		'ﾚｺｰﾄﾞｾｯﾄの取得失敗
-		msMsg = Err.description
-		Exit function
-	End If
-	
-	p_UpdateDate = gf_YYYY_MM_DD(w_Rs(0),"/")
+        f_GetUpdateDate = 0
+        Exit Do
+    Loop
 
-	f_GetUpdateDate = true
-	
-end function
+    Call gf_closeObject(w_Rs)
+
+End Function
+
 
 '********************************************************************************
 '*  [機能]  未評価の設定
@@ -557,48 +535,7 @@ End If
 		parent.main.document.frm.submit();
 	
 	}
-	
-	//************************************************************
-	//	[機能]	未評価がチェックされたとき
-	//	[引数]	
-	//	[戻値]	
-	//	[説明]	
-	//************************************************************
-	function setHyoka(){
-		var w_num,w_type;
-		var ob = new Array();
-		
-		if(document.frm.chkMiHyoka.checked){
-			parent.main.document.frm.hidMihyoka.value=<%=C_MIHYOKA%>;
-			w_type = true;
-		}else{
-			parent.main.document.frm.hidMihyoka.value="";
-			w_type = false;
-		}
-		
-		for(w_num=1;w_num<<%=m_iCount%>;w_num++){
-			ob[0] = eval("parent.main.document.frm.chkHyokaFuno" + w_num);
-			ob[1] = eval("parent.main.document.frm.Seiseki" + w_num);
-			//ob[2] = eval("parent.main.document.frm.button" + w_num);
-			//ob[3] = eval("parent.main.document.frm.Hyoka" + w_num);
-			
-			//if(typeof(ob[0]) != "undefined"){
-			if(typeof(ob[0]) != "undefined" && ob[0].type == "checkbox"){
-				if(w_type){
-					ob[0].checked = false;
-					ob[1].value = "";
-					//ob[2].value = "・";
-					//ob[3].value = "";
-				}
-				
-				ob[0].disabled = w_type;
-				ob[1].disabled = w_type;
-				//ob[2].disabled = w_type;
-			}
-		}
-		
-		parent.main.f_GetTotalAvg();
-	}
+
 	
 	//-->
 	</SCRIPT>
@@ -619,30 +556,20 @@ End If
 		<tr>
 			<td align="center" nowrap><form name="frm" method="post">
 				<table border=1 class=hyo width=670>
-					<!-- コメント
+					
 					<tr>
 						<th class="header3" colspan="6" nowrap align="center">
 						成績入力期間　<%=m_sSikenNm%>　　　更新日：<%=m_UpdateDate%>
 						</th>
 					</tr>
+
 					<tr>
-						<th class=header3 width="96"  align="center">再試験成績入力期間</th><td class=detail width="239"  align="center" colspan="2"><%=m_iNKaishi%> ～ <%=m_iNSyuryo%></td>
+						<th class=header3 width="96"  align="center">仮進級成績入力期間</th><td class=detail width="239"  align="center" colspan="2"><%=m_iNKaishi%> ～ <%=m_iNSyuryo%></td>
 					</tr>
 					<tr>
-					... --> 
+
 						<th class=header3 width="96"  align="center">実施科目</th>
-						<%
-							If f_LevelChk(m_sGakuNo,m_sKamokuCd) = true then 
-								' w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & m_sKamokuNM
-								' w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd) 
-								w_str = f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd) 
-							Else
-								' w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & m_sKamokuNM
-								'w_str = m_sGakuNo & "年　" & gf_GetClassName(m_iNendo,m_sGakuNo,m_sClassNo) & "　" & f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd) 
-								w_str = f_GetKamokuName(m_sGakuNo,m_sGakkaCd,m_sKamokuCd) 
-							End If
-						%>
-						<td class=detail colspan="5" align="center"><%=w_str%></td>
+						<td class=detail colspan="5" align="center"><%=m_sKamokuNM%></td>
 					</tr>
 				</table>
 			</td>
@@ -651,21 +578,20 @@ End If
 			<td align="center">
 				<span class=msg2>
 				<%
-				'通常授業と特別活動で表示を変える
-				If m_TUKU_FLG = C_TUKU_FLG_TUJO Then
-					Select Case m_sSikenKBN
-						Case C_SIKEN_ZEN_TYU
-							%>※ 評価欄をクリックすると、評価の入力ができます。（○→・の順で表示されます）<br><%
-						Case C_SIKEN_KOU_TYU
-							%>※ 評価欄をクリックすると、評価の入力ができます。（○→◎→・の順で表示されます）<br><%
-						Case Else
-							response.write "<BR>"
-					End Select
-				End If
+				'通常授業
+				Select Case m_sSikenKBN
+					Case C_SIKEN_ZEN_TYU
+						%>※ 評価欄をクリックすると、評価の入力ができます。（○→・の順で表示されます）<br><%
+					Case C_SIKEN_KOU_TYU
+						%>※ 評価欄をクリックすると、評価の入力ができます。（○→◎→・の順で表示されます）<br><%
+					Case Else
+						response.write "<BR>"
+				End Select
+				
 				%>
 				</span>
 				
-				<% If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then %>
+				<%If m_iKikan <> "NO" Then%>
 					<input type=button class=button value="　登　録　" onclick="javascript:f_Touroku()">　
 				<%End If%>
 				<input type=button class=button value="キャンセル" onclick="javascript:f_Cansel()">
@@ -677,21 +603,13 @@ End If
 				<table class="hyo" border="1" align="center" width="<%= gf_IIF(m_SchoolFlg,760,710) %>">
 					<tr>
 						<th class="header3" colspan="14" nowrap align="center">
-							<%
-							if m_SchoolFlg then
-								Call setHyokaType()
-							%>
-							<input type="checkbox" name="chkMiHyoka" value="4" onClick="setHyoka();" <%=m_Disabled%> <%=m_Checked%>>未評価　
-							<% end if %>
+
 						</th>
 					</tr>                                                                                                                                                 
 					
 					<tr>
 						<th class="header3" rowspan="2" width="65"  nowrap><%=gf_GetGakuNomei(m_iNendo,C_K_KOJIN_1NEN)%></th>
 						<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
-						<!--  コメント　削除対象
-						<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
-						-->
 						<th class="header3" rowspan="2" width="50"  nowrap >成績</th>
 						<th class="header3" rowspan="2" width="50"  nowrap>評価</th>
 						<% if m_SchoolFlg then %>
@@ -701,12 +619,6 @@ End If
 					</tr>
 					
 					<tr>
-					<!--  コメント　削除対象
-						<th class="header2" width="30" nowrap><span style="font-size:10px;">前中</span></th>
-						<th class="header2" width="30" nowrap><span style="font-size:10px;">前末</span></th>
-						<th class="header2" width="30" nowrap><span style="font-size:10px;">後中</span></th>
-						<th class="header2" width="30" nowrap><span style="font-size:10px;">学末</span></th>
-					-->
 					</tr>
 				</table>
 
