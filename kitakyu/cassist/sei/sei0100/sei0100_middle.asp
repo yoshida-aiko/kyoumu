@@ -676,9 +676,9 @@ End If
 				<!--通常授業と特別活動で表示を変える。-->
 				<% If m_TUKU_FLG = C_TUKU_FLG_TUJO Then %>
 					
-					<table class="hyo" border="1" align="center" width="<%= gf_IIF(m_SchoolFlg,760,710) %>">
+					<table class="hyo" border="1" align="center" width="<%= gf_IIF(m_SchoolFlg,760,875) %>"><%' 2022.03.08 再履修対応 UPD width 710→875%>
 						<tr>
-							<th class="header3" colspan="14" nowrap align="center">
+							<th class="header3" colspan="17" nowrap align="center">
 								総授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtSouJyugyou" value="<%= Request("hidSouJyugyou") %>"><% Else %><%= Request("hidSouJyugyou") %><% End if%>　
 								純授業時間数&nbsp;<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%><input type="text" <%=w_sInputClass%> maxlength="3" style="width:30px" name="txtJunJyugyou" value="<%= Request("hidJunJyugyou") %>"><% Else %><%= Request("hidJunJyugyou") %><% End if%>　　　
 								<%
@@ -698,7 +698,9 @@ End If
 							<th class="header3" rowspan="2" width="50"  nowrap>前年度</th><%' 2022.03.04 再履修対応 Ins %>
 							<th class="header3" rowspan="2" width="50"  nowrap>評価</th>
 							<th class="header3" colspan="2" width="110" nowrap>遅刻</th>
+							<th class="header3" width="55" nowrap>前年度<BR>遅刻</th><%' 2022.03.08 再履修対応 Ins %>
 							<th class="header3" colspan="3" width="165" nowrap>欠課</th>
+							<th class="header3" colspan="2" width="115" nowrap>前年度欠課</th><%' 2022.03.08 再履修対応 Ins %>
 							
 							<% if m_SchoolFlg then %>
 								<th class="header3" rowspan="2" width="50"  nowrap>評価<br>不能</th>
@@ -713,9 +715,16 @@ End If
 							<th class="header2" width="30" nowrap><span style="font-size:10px;">学末</span></th>
 							<th class="header2" width="55" nowrap onClick="f_Paste('Chikai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">入力</FONT></span></th>
 							<th class="header2" width="55" nowrap><span style="font-size:10px;">日々計</span></th>
+							<%' 2022.03.08 再履修対応 Ins ST%>
+							<th class="header2" width="55" nowrap onClick="f_Paste('Chikai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">入力</FONT></span></th>
+							<%' 2022.03.08 再履修対応 Ins ED%>
 							<th class="header2" width="55" nowrap onClick="f_Paste('Kekka')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象</FONT></span></th>
 							<th class="header2" width="55" nowrap onClick="f_Paste('KekkaGai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象外</FONT></span></th>
 							<th class="header2" width="55" nowrap><span style="font-size:10px;">日々計</span></th>
+							<%' 2022.03.08 再履修対応 Ins ST%>
+							<th class="header2" width="55" nowrap onClick="f_Paste('Kekka')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象</FONT></span></th>
+							<th class="header2" width="55" nowrap onClick="f_Paste('KekkaGai')"><span style="font-size:10px;"><FONT COLOR="#99CCFF">対象外</FONT></span></th>
+							<%' 2022.03.08 再履修対応 Ins ED%>
 						</tr>
 					</table>
 				<% else %>
@@ -732,7 +741,6 @@ End If
 							<th class="header3" rowspan="2" width="150" nowrap>氏　名</th>
 							<th class="header3" colspan="4" width="120" nowrap>成績履歴</th>
 							<th class="header3" rowspan="2" width="50" nowrap onClick="f_Paste('Seiseki')"><FONT COLOR="#99CCFF">成績</FONT></th>
-							<th class="header3" rowspan="2" width="50"  nowrap>前年度</th><%' 2022.03.04 再履修対応 Ins %>
 							<th class="header3" rowspan="2" width="50" nowrap>評価</th>
 							<th class="header3" rowspan="2" width="100" nowrap onClick="f_Paste('Chikai')"><FONT COLOR="#99CCFF">遅刻</FONT></th>
 							<th class="header3" colspan="2" width="165" nowrap>欠課</th>

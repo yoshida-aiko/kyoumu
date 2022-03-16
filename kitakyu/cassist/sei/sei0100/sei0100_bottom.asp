@@ -422,6 +422,11 @@ Dim w_iNyuNendo
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_Z as DataKbn ,"
 				w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 ‹g“c@Ä—šC‘Î‰
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & "		D.T19_CHIKAI_TYUKAN_Z as ZenNendoCHIKAI ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_TYUKAN_Z as ZenNendoKEKA ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_TYUKAN_Z as ZenNendoKEKA_NASI ,"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 				
 			Case C_SIKEN_ZEN_KIM
 				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_Z AS SEI,A.T16_KEKA_KIMATU_Z AS KEKA,A.T16_KEKA_NASI_KIMATU_Z AS KEKA_NASI,A.T16_CHIKAI_KIMATU_Z AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_Z AS HYOKAYOTEI, "
@@ -429,6 +434,11 @@ Dim w_iNyuNendo
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_Z as DataKbn,"
 				w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 ‹g“c@Ä—šC‘Î‰
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_Z as ZenNendoCHIKAI ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_Z as ZenNendoKEKA ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_Z as ZenNendoKEKA_NASI ,"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 				
 			Case C_SIKEN_KOU_TYU
 				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_K AS SEI,A.T16_KEKA_TYUKAN_K AS KEKA,A.T16_KEKA_NASI_TYUKAN_K AS KEKA_NASI,A.T16_CHIKAI_TYUKAN_K AS CHIKAI,A.T16_HYOKAYOTEI_TYUKAN_K AS HYOKAYOTEI, "
@@ -436,6 +446,11 @@ Dim w_iNyuNendo
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_K as DataKbn,"
 				w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 ‹g“c@Ä—šC‘Î‰
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & "		D.T19_CHIKAI_TYUKAN_K as ZenNendoCHIKAI ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_TYUKAN_K as ZenNendoKEKA ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_TYUKAN_K as ZenNendoKEKA_NASI ,"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 				
 			Case C_SIKEN_KOU_KIM
 				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_Z AS SEI_ZT,A.T16_KEKA_TYUKAN_Z AS KEKA_ZT,A.T16_KEKA_NASI_TYUKAN_Z AS KEKA_NASI_ZT,A.T16_CHIKAI_TYUKAN_Z AS CHIKAI_ZT,A.T16_HYOKAYOTEI_TYUKAN_Z AS HYOKAYOTEI_ZT, "
@@ -452,6 +467,12 @@ Dim w_iNyuNendo
 
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_K as DataKbn,"
 				w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 ‹g“c@Ä—šC‘Î‰
+
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_K as ZenNendoCHIKAI ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_K as ZenNendoKEKA ,"
+				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_K as ZenNendoKEKA_NASI ,"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 				
 		End Select
 		
@@ -475,12 +496,32 @@ Dim w_iNyuNendo
 		Select Case m_sSikenKBN
 			Case C_SIKEN_ZEN_TYU
 				w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_Z"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_TYUKAN_Z"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_TYUKAN_Z"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_TYUKAN_Z"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 			Case C_SIKEN_ZEN_KIM
 				w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_Z"	
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_Z"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_Z"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_Z"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 			Case C_SIKEN_KOU_TYU
 				w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_K"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_TYUKAN_K"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_TYUKAN_K"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_TYUKAN_K"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 			Case C_SIKEN_KOU_KIM
 				w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_K"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ST
+				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_K"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_K"
+				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_K"
+				'//INS 2022/03/09 ‹g“c@Ä—šC‘Î‰ ED
 		End Select
 		w_sSQL = w_sSQL & "	 	  FROM "
 		w_sSQL = w_sSQL & " 	  	T11_GAKUSEKI "
@@ -1022,7 +1063,7 @@ Function f_GetKekaChi(p_iNendo,p_iSikenKBN,p_sKamokuCD,p_sGakusei,p_iKekka,p_iCh
 		msMsg = Err.description
 		f_GetKekaChi = 99
 	End If
-	
+	' response.write "w_sSQL:" & w_sSQL & "<BR>"
 	'//–ß‚è’l¾¯Ä
 	If w_KekaChiRs.EOF = False Then
 		p_iKekka = gf_SetNull2String(w_KekaChiRs("KEKA"))
@@ -1092,7 +1133,13 @@ Sub showPage()
 			w_Disabled = "disabled"
 		end if
 	else
-		w_TableWidth = 710
+	' 2022.03.08 UPD
+		' w_TableWidth = 710
+		if m_TUKU_FLG = C_TUKU_FLG_TUJO then 
+			w_TableWidth = 875
+		else 
+			w_TableWidth = 710
+		end if
 	end if
 	
 %>
@@ -1702,7 +1749,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 				
 				'//’x”‚Ìæ“¾
 				w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_TIKOKU)
-				w_sChikaisu = gf_IIF(w_sData = "", "", cint(gf_SetNull2Zero(w_sData)))
+				w_sChikaisu = gf_IIF(w_sData = "", "", cint(gf_SetNull2Zero(w_sData)))		
 				
 				'//‘‘Ş”‚Ìæ“¾
 				w_sData=f_Syukketu2New(w_sGakusekiCd,C_KETU_SOTAI)
@@ -1713,16 +1760,14 @@ if (w_KekkaGai){		//2001/12/17 Add
 					'‚Ç‚¿‚ç‚©ˆê•û""‚Å‚È‚¯‚ê‚ÎŒvZ
 					w_sChikaisu = cint(gf_SetNull2Zero(w_sChikaisu)) + cint(gf_SetNull2Zero(w_sData))			'//‚PŒ‡‰Û‚Ìê‡‚ÌŒ‡‰Û”‚Ìæ“¾
 				end if
-			end if
-			
+			end if		
 			'---------------------------------------------------------------------------------------------
 			
 			'uoŒ‡Œ‡‰Û‚ª—İÏv‚Åu‘OŠú’†ŠÔ‚Å‚È‚¢v‚Ìê‡
 			'Œ‡‰ÛEŒ‡È‚ªNull‚¾‚Á‚½ê‡A—‚¿‚é‚½‚ßŠÖ”’Ç‰Á Add 2001.12.16 okada
 			if cint(m_iSyubetu) = cint(C_K_KEKKA_RUISEKI_KEI) and w_sShikenKBN_RUI <> 99 then 
 				'ˆê‚Â‘O‚ÌŒ±‚Ì‡Œv’l‚ğ‘«‚·B
-				call f_GetKekaChi(m_iNendo,m_iShikenInsertType,m_sKamokuCd,cstr(m_Rs("GAKUSEI_NO")),w_iKekka_rui,w_iChikoku_rui,w_iKekkaGai_rui)
-				
+				call f_GetKekaChi(m_iNendo,m_iShikenInsertType,m_sKamokuCd,cstr(m_Rs("GAKUSEI_NO")),w_iKekka_rui,w_iChikoku_rui,w_iKekkaGai_rui)		
 				'‚Ç‚¿‚ç‚à""‚Ì‚Í""
 				if w_sKekkasu = "" and w_iKekka_rui = "" then
 					w_sKekkasu = ""
@@ -1731,7 +1776,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 				end if
 
 'response.write(w_sGakusekiCd & ":" & " T16 w_sKekkasu = " & w_sKekkasu & "<BR><BR>")
-				
 				'‚Ç‚¿‚ç‚à""‚Ì‚Í""
 				if w_sChikaisu = "" and w_iChikoku_rui = "" then
 					w_sChikaisu = ""
@@ -1748,8 +1792,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 			'If cint(gf_SetNull2Zero(w_sChikai)) = 0 AND cint(gf_SetNull2Zero(w_sChikaisu)) > 0 Then		'//’x“ü‚ª0‚Å,’xŒv‚ª0‚æ‚è‘å‚«‚¢ê‡
 			If gf_SetNull2String(w_sChikai) = "" and cint(gf_SetNull2Zero(w_sChikaisu)) > 0 Then		'//’x“ü‚ª0‚Å,’xŒv‚ª0‚æ‚è‘å‚«‚¢ê‡
 				w_sChikai = cint(gf_SetNull2Zero(w_sChikaisu))							'//’x“ü’xŒv
-			End If
-			
+			End If				
 			
 			if m_SchoolFlg and m_TUKU_FLG = C_TUKU_FLG_TUJO then
 				'//•]‰¿•s”\ƒf[ƒ^İ’è
@@ -1798,10 +1841,15 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<%' 2022.03.04 Ä—šC‘Î‰ Ins ED%>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
+					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td><%' 2022.03.08 Ä—šC‘Î‰ Ins%>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
+					<%' 2022.03.08 Ä—šC‘Î‰ Ins ST%>
+					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
+					<td class="<%=w_cell%>" align="center" width="55"  nowrap <%=w_Padding%>>-</td>
+					<%' 2022.03.08 Ä—šC‘Î‰ Ins ED%>
 				<%Else%>
 
 					<input type="hidden" name="txtGseiNo<%=i%>" value="<%=m_Rs("GAKUSEI_NO")%>">
@@ -1814,9 +1862,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="30"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-					<%' 2022.03.04 Ä—šC‘Î‰ Ins ST%>
-					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
-					<%' 2022.03.04 Ä—šC‘Î‰ Ins ED%>
 					<td class="<%=w_cell%>" align="center" width="50"  nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="100" nowrap <%=w_Padding%>>-</td>
 					<td class="<%=w_cell%>" align="center" width="80"  nowrap <%=w_Padding%>>-</td>
@@ -1904,9 +1949,16 @@ if (w_KekkaGai){		//2001/12/17 Add
 							
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
+							<%' 2022.03.08 Ä—šC‘Î‰ Ins ST%>
+							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoCHIKAI"))%></td>
+							<%' 2022.03.08 Ä—šC‘Î‰ Ins ED%>
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
+							<%' 2022.03.08 Ä—šC‘Î‰ Ins ST%>
+							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA"))%></td>
+							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA_NASI"))%></td>
+							<%' 2022.03.08 Ä—šC‘Î‰ Ins ED%>
 					<%Else%>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>	<%'-- 2022.03.04 Ä—šC‘Î‰ Ins-- %>
@@ -1948,12 +2000,18 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<%End If%>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
+						<%' 2022.03.08 Ä—šC‘Î‰ Ins ST%>
+						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoCHIKAI"))%></td>
+						<%' 2022.03.08 Ä—šC‘Î‰ Ins ED%>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
+						<%' 2022.03.08 Ä—šC‘Î‰ Ins ST%>
+						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA"))%></td>
+						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA_NASI"))%></td>
+						<%' 2022.03.08 Ä—šC‘Î‰ Ins ED%>
 					<%Else%>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
-						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>	<%'-- 2022.03.04 Ä—šC‘Î‰ Ins-- %>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
 						<td class="<%=w_cell%>" width="100" align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="80"  align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
