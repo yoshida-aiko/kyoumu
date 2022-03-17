@@ -102,9 +102,9 @@ Sub showPage()
 </head>
 
 <!--<frameset rows=160,1,* frameborder="0" framespacing="0">-->
-<frameset rows=245px,1,* frameborder="0" framespacing="0">
+<frameset rows=272px,1,* frameborder="0" framespacing="0" name= 'fs'> <% '- rows=245px,1,* ¨ 272‚ÉC³@2022.03.16 %>
 	<!--<frame src="sei0100_top.asp" scrolling="auto"  name="top" noresize>-->
-	<frame src="sei0100_top.asp" scrolling="yes"  name="topFrame" noresize>
+	<frame src="sei0100_top.asp" scrolling="auto"  name="topFrame" noresize>
     <frame src="../../common/bar.html" scrolling="auto" noresize name="bar">
 	<frame src="default2.asp" scrolling="yes"  name="main" noresize>
 </frameset>

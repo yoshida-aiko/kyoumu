@@ -1168,6 +1168,11 @@ Sub showPage()
 		document.frm.hidSouJyugyou.value = "<%= m_iSouJyugyou %>";
 		document.frm.hidJunJyugyou.value = "<%= m_iJunJyugyou %>";
 		
+		var scrollbarWidth = window.innerWidth - document.body.clientWidth;
+		// alert('window.innerWidth: ' + window.innerWidth +'\n document.body.clientWidth: ' + document.body.clientWidth
+		// +'\n scrollbarWidth: ' + scrollbarWidth);
+
+		document.frm.scrollbarWidth.value = scrollbarWidth;
         //submit
         document.frm.target = "topFrame";
         document.frm.action = "sei0100_middle.asp"
@@ -1176,7 +1181,6 @@ Sub showPage()
         return;
 		
     }
-	
 	//************************************************************
     //  [ã@î\]  ï]âøÉ{É^ÉìÇ™âüÇ≥ÇÍÇΩÇ∆Ç´
     //  [à¯êî]  Ç»Çµ
@@ -1570,7 +1574,6 @@ if (w_KekkaGai){		//2001/12/17 Add
 	<form name="frm" method="post">
 	
 	<table width="<%=w_TableWidth%>">
-	<tr>
 	<td>
 	
 	<table class="hyo" align="center" width="<%=w_TableWidth%>" border="1">
@@ -1901,10 +1904,12 @@ if (w_KekkaGai){		//2001/12/17 Add
 						w_sInputClass = "class='num'"
 						w_sInputClass1 = "class='num'"
 						w_sInputClass2 = "class='num'"
+						w_sInputClass3 = "class='num'" '2022.03.16INS
 					Else
 						w_sInputClass = ""
 						w_sInputClass1 = ""
 						w_sInputClass2 = ""
+						w_sInputClass3 = "" '2022.03.16INS
 					End If
 					
 					if m_iKikan = "NO" Then
@@ -1915,7 +1920,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 					if Not m_bKekkaNyuryokuFlg then
 						w_sInputClass2 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'"
 					End if
-					
+					w_sInputClass3 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'" '2022.03.16INS
 					'=========================================================================
 					'//í èÌéˆã∆ÇÃèÍçá 
 					'=========================================================================
@@ -1950,14 +1955,14 @@ if (w_KekkaGai){		//2001/12/17 Add
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
 							<%' 2022.03.08 çƒóöèCëŒâû Ins ST%>
-							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoCHIKAI"))%></td>
+							<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass3%> name=ZenNendoCHIKAI value="<%=(m_Rs("ZenNendoCHIKAI"))%>" size=2 maxlength=3 ></td>
 							<%' 2022.03.08 çƒóöèCëŒâû Ins ED%>
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
 							<%' 2022.03.08 çƒóöèCëŒâû Ins ST%>
-							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA"))%></td>
-							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA_NASI"))%></td>
+							<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass3%>  name=ZenNendoKEKA value="<%=(m_Rs("ZenNendoKEKA"))%>" size=2 maxlength=3 ></td>
+							<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass3%>  name=ZenNendoKEKA_NASI value="<%=(m_Rs("ZenNendoKEKA_NASI"))%>" size=2 maxlength=3 ></td>
 							<%' 2022.03.08 çƒóöèCëŒâû Ins ED%>
 					<%Else%>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
@@ -1974,7 +1979,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<%' 2022.03.04 çƒóöèCëŒâû UPD ST%>
 						<%' ñ∆èúÉtÉâÉOÇ™óßÇ¡ÇƒÇ¢ÇÍÇŒÅAï∂éöÇ∆ÇµÇƒï\é¶--%>
 						<% If CInt(gf_SetNull2Zero(m_Rs("Menjo"))) = 1 Then %>
-							<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>><font size="2"><%=w_sSeiseki%></font></td>
+							<td class="<%=w_cell%>" width="50"align="right" nowrap <%=w_Padding%>><font size="2"><%=w_sSeiseki%></font></td>
 						<%Else%>
 							<td class="<%=w_cell%>" width="50" align="right" nowrap <%=w_Padding%>>
 								<input type="text" <%= w_sInputClass1 %> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
@@ -1991,7 +1996,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 							End If
 						%>
 						<%' 2022.03.04 çƒóöèCëŒâû Ins ST%>
-						<td class="<%=w_cell%>" align="center" width="50" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoSeiseki"))%></td>
+						<td class="<%=w_cell%>" align="right" width="50" nowrap <%=w_Padding%>><font size="2"><%=gf_HTMLTableSTR(m_Rs("ZenNendoSeiseki"))%></font></td>
 						<%' 2022.03.04 çƒóöèCëŒâû Ins ED%>
 						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
 								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
@@ -2001,14 +2006,14 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
 						<%' 2022.03.08 çƒóöèCëŒâû Ins ST%>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoCHIKAI"))%></td>
+						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%> ><input type="text" <%=w_sInputClass3%> name=ZenNendoCHIKAI value="<%=(m_Rs("ZenNendoCHIKAI"))%>" size=2 maxlength=3 ></td>
 						<%' 2022.03.08 çƒóöèCëŒâû Ins ED%>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sKekkasu)%></td>
 						<%' 2022.03.08 çƒóöèCëŒâû Ins ST%>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA"))%></td>
-						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoKEKA_NASI"))%></td>
+						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass3%>  name=ZenNendoKEKA value="<%=(m_Rs("ZenNendoKEKA"))%>" size=2 maxlength=3 ></td>
+						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass3%>  name=ZenNendoKEKA_NASI value="<%=(m_Rs("ZenNendoKEKA_NASI"))%>" size=2 maxlength=3 ></td>
 						<%' 2022.03.08 çƒóöèCëŒâû Ins ED%>
 					<%Else%>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
@@ -2065,7 +2070,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 			<tr>
 				<td align="center" align="center" colspan="13">
 					<%If m_iKikan <> "NO" or m_bKekkaNyuryokuFlg Then%>
-						<input type="button" class="button" value="Å@ìoÅ@ò^Å@" onclick="javascript:f_Touroku()">Å@
+						<input type="button" class="button" value="Å@ìoÅ@ò^Å@" onclick="javascript:f_Touroku()">
 					<%End If%>
 						<input type="button" class="button" value="ÉLÉÉÉìÉZÉã" onclick="javascript:f_Cansel()">
 				</td>
@@ -2095,8 +2100,8 @@ if (w_KekkaGai){		//2001/12/17 Add
 	<input type="hidden" name="hidFirstGakusekiNo" value="<%=m_FirstGakusekiNo%>">
 	<input type="hidden" name="hidMihyoka" value ="<%=w_DataKbn%>">
 	<input type="hidden" name="hidSchoolFlg" value ="<%=m_SchoolFlg%>">
-	
-	
+	<!-- 2022/03/17 í«â¡ -->
+	<input type="hidden" name="scrollbarWidth" value="<%=scrollbarWidth%>">
 	</FORM>
 	</center>
 	</body>
