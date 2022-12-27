@@ -1,0 +1,83 @@
+<OBJECT RUNAT=Server SCOPE=Application ID=OraSession
+  PROGID="OracleInProcServer.XOraSession">
+</OBJECT>
+<SCRIPT LANGUAGE=VBScript RUNAT=Server>
+
+'次の場合に自動的に実行する特別なイベント ハンドラを追加できます  
+'特別な Active Server Page イベントが発生した場合。これらのハンドラを作成するために 
+'以下のリスト内の使用したいイベントに対応する名前でサブリーチンを作成してください。 
+'例 Session_OnStart 用のイベント ハンドラを追加するには、
+'コメントを付けずに、以下のコードをこのファイルへ追加してください:
+'-----------------------------------------------------------------------------------------
+'EventName              説明
+'Session_OnStart        ユーザーがアプリケーションでページを最初に実行する際に起動します。
+'Session_OnEnd          ユーザーのセッションがタイム アウトするか、ユーザーがアプリケーションを終了する際に実行されます。
+'Application_OnStart    ユーザーにより、初めてアプリケーションの最初のページが実行される際に、一度のみ起動します。
+'Application_OnEnd      Web サーバーの終了時に、一度のみ実行されます。
+'-----------------------------------------------------------------------------------------
+Sub Session_OnStart
+'** ここにコードを入力します**
+
+	'変数初期化
+'// oo4o用
+	'テストDB(NTSVR_3)
+	Session("USER_ID") = "sniihama"
+	
+	Session("PASS") = "infogram0327"
+	Session("CONNECT") = "niihama"
+    Session("oo4o_open") = false
+	'セッションのタイムアウト時間設定
+    Session.Timeout = 60
+    
+    '** oo4o セッション作成
+    Set Session("OraDatabase") = OraSession.GetDatabaseFromPool(100)
+                                                                '|_ wait time seconds
+
+    '** パラメタ追加
+    Session("OraDatabase").Parameters.Add "IMG_KEY", 0, 1            'ORAPARM_INPUT
+    Session("OraDatabase").Parameters("IMG_KEY").ServerType = 96     'ORATYPE_CHAR
+
+    w_sSQL = ""
+    w_sSQL = w_sSQL & " SELECT "
+    w_sSQL = w_sSQL & " T09_IMAGE"
+    w_sSQL = w_sSQL & " FROM T09_GAKU_IMG"
+    w_sSQL = w_sSQL & " WHERE T09_GAKUSEI_NO = :IMG_KEY"
+
+    '** リクエリレコードセットオープン
+    set Session("qurs") = Session("OraDatabase").CreateDynaset(w_sSQL, 0 ) 'ORADYN_DEFAULT)
+
+End Sub
+
+Sub Application_OnStart
+
+  const dbname = "niihama"
+  const cnuser = "sniihama/infogram0327"
+  
+'** oo4o 接続プール作成
+  OraSession.CreateDatabasePool 1, 100, 200, dbname, cnuser, 0
+                               '|   |    |_ timeout seconds
+                               '|   |_ max size
+                               '|_ init size
+
+End Sub
+
+Sub Application_OnEnd
+
+'** oo4o 接続プール廃棄
+  OraSession.DestroyDatabasePool
+
+End Sub
+
+Sub Session_OnEnd
+
+'** oo4o セッション廃棄
+  Session("OraDatabase").Parameters.Remove "IMG_KEY"
+  Session("qurs").Close
+  Set Session("qurs") = Nothing
+
+  Set Session("OraDatabase") = Nothing
+
+End Sub
+
+</SCRIPT>
+

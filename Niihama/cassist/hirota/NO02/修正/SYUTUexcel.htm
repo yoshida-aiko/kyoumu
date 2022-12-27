@@ -1,0 +1,226 @@
+
+<%
+	On Error Resume Next
+            
+	Dim g_cCn,g_rRs,w_sSQL,w_Index
+	Dim w_sStartCD,w_sEndCD,w_sName,w_checkDel
+	
+	w_sStartCD = Request.Form("txtStartCD")
+	w_sEndCD = Request.Form("txtEndCD")
+	w_sName = Request.Form("txtName")
+	w_checkDel = Request.Form("checkDel")
+	
+	Set g_cCn = Server.CreateObject("ADODB.Connection")
+	Set g_rRs = Server.CreateObject("ADODB.Recordset")
+	
+    g_cCn.Open "provider=Microsoft.Jet.OLEDB.4.0;" _
+                        & "Data Source=\\WEBSVR_2\infogram\hirota\sample2000.mdb"
+    g_rRs.Open "M_社員",g_cCn,2,2
+    
+    
+    function gf_bSEICD(p_sCD)
+    gf_bSEICD = false
+' 社員CDの入力型が数字になっているか？
+    If IsNumeric(p_sCD) = False Then
+        Exit Function
+    End If
+' 文字制限（カンマ、負号、小数点、￥マークは受け付けない）
+    If InStr(p_sCD, ".") <> 0 Then
+        Exit Function
+    End If
+    If InStr(p_sCD, "-") <> 0 Then
+        Exit Function
+    End If
+    If InStr(p_sCD, "+") <> 0 Then
+        Exit Function
+    End If
+    If InStr(p_sCD, ",") <> 0 Then
+        Exit Function
+    End If
+    If InStr(p_sCD, "\") <> 0 Then
+        Exit Function
+    End If
+	if p_sCD < 0 or p_sCD > 9999 then
+		Exit Function
+	End If
+    gf_bSEICD = True
+	end function
+'************************************************************************************************
+'                         EXCELのテキストの入力文字判定とSQL作成
+'************************************************************************************************
+	Response.Write w_sStartCD
+
+    w_sSQL = "SELECT * FROM M_社員 WHERE 社員CD >=0"
+    If w_sStartCD <> "" Then
+        If w_sEndCD <> "" Then
+            If gf_bSEICD(w_sStartCD) = False Then
+                Response.Redirect "MsgCSV.asp"
+            End If
+            w_sSQL = w_sSQL & " AND 社員CD >=" & w_sStartCD & " AND 社員CD<=" & w_sEndCD
+        Else
+            If gf_bSEICD(w_sStartCD) = False Then
+               Response.Redirect "MsgCSV.asp"
+            End If
+            w_sSQL = w_sSQL & " AND 社員CD >=" & w_sStartCD
+        End If
+    ElseIf w_sEndCD <> "" Then
+        If gf_bSEICD(w_sEndCD) = False Then
+            Response.Redirect "MsgCSV.asp"
+        End If
+        w_sSQL = w_sSQL & " AND 社員CD <=" & w_sEndCD
+    End If
+    If w_sName <> "" Then
+        w_sSQL = w_sSQL & " AND 社員名称 LIKE '%" & w_sName & "%'"
+    End If
+    If w_checkDel = 1 Then
+        w_sSQL = w_sSQL & " AND 使用FLG=1"
+    End If
+    w_sSQL = w_sSQL & " ORDER BY 1 ASC"
+    
+    Set g_rRs = g_cCn.Execute(w_sSQL)
+	'Response.Write g_rRs.EOF
+	'Response.Write w_sSQL
+
+	if g_rRs.EOF=true then
+		Response.Redirect "MsgCSV02.asp"
+	end if
+	
+' --------------------------- Excelを作る
+'Sub ModeExcel
+%>
+
+<SCRIPT LANGUAGE="VBS">
+
+<!-- ブラウザ側のスクリプト
+
+	' 変数宣言
+	Dim objExcelApp
+
+	On Error Resume Next
+	Err.Clear
+	
+	Set objExcelApp = CreateObject("Excel.Application")
+	If Err Then
+		Session.Contents("ERROR")=Err.Description
+		'<% Response.Redirect "MsgExcel.asp" %>
+		document.write"<html>"
+			document.write"<head>"
+				document.write"<title>社員管理</title>"
+				document.write"<base target=Right>"
+			document.write"</head>"
+			document.write"<body>"
+				document.write"<h3 align=center>■ 出力エラー ■</h3>"
+					document.write"<hr><br>"
+				document.write"<h4 align=center><font color=red>Excelを起動できませんでした<br>"
+				document.write"※データベースのデータを出力することが出来ませんでした。</font></h4>"
+				document.write"<p align=center>"
+					'エラー：<%= Err.Description %>"
+				document.write"</p>"
+				document.write"<p align=center>"
+				document.write"<form action=EXCEL.asp target=Right>"
+				document.write"<input type=submit value=戻る>"
+				document.write"</form></p>"
+			document.write"</body>"
+		document.write"</html>"
+	Else
+		On Error goto 0
+		' objExcelApp.Workbooks.Add
+		' 既存テンプレートのOpen
+		' ※ 新規ワークシートの作成の場合は、
+		' 　 変わりに objExcelApp.Workbooks.Add
+		objExcelApp.Workbooks.Open "\\WEBSVR_2\infogram\hirota\No02\sample.xls",,True
+									'"http://www.kawabata.com/CreateExcel/demo.xls",,True
+									'"\\WEBSVR_2\infogram\hirota\Sample.xls",,True
+		Set objExcelBook = objExcelApp.ActiveWorkbook
+		Set objExcelSheets = objExcelBook.Worksheets
+		Set objExcelSheet = objExcelBook.Sheets(1)
+		objExcelSheet.Activate
+		objExcelApp.Application.Visible = True
+
+		objExcelSheet.Cells(2,2).Value = 1
+		objExcelSheet.Cells(3,2).Value = 2
+		objExcelSheet.Cells(4,2).Value = 3
+		objExcelSheet.Cells(5,2).Formula = "=sum(B2:B4)"
+		'objExcelSheet.Range("celNow").Value = <%= now() %>
+		xSum = objExcelSheet.Cells(4,1).Value
+		
+		document.write"<html>"
+		document.write"<head>"
+			document.write"<title>社員管理</title>"
+			document.write"<base target=Right>"
+		document.write"</head>"
+		<!-- <BODY BGCOLOR=#F5F5F5> -->
+		document.write"<body>"
+			document.write"<h3 align=center>★ EXCEL出力 ★</h3>"
+				document.write"<hr>"
+			document.write"<h2 align=center><font color=red>EXCEL出力が完了しました！</font></h2>"
+
+		document.write"<table align=center>"
+			document.write"<tr>"
+				document.write"<td>"
+					document.write"出力件数"
+				document.write"</td>"
+				document.write"<td>"
+					document.write"："
+				document.write"</td>"
+				document.write"<td>"
+					'document.write<%= Request.QueryString("Count") %> 件
+				document.write"</td>"
+			document.write"</tr>"
+		document.write"</table>"
+		document.write"</td>"
+		document.write"</tr>"
+		document.write"</table>"
+		document.write"<br>"
+		document.write"<table align=center width=20%>"
+			document.write"<tr>"
+				document.write"<td align=center>"
+				document.write"<form action=EXCEL.asp id=form1 name=form1>"
+					document.write"<p align=center><input type=submit value=戻る id=submit1 name=submit1>"
+				document.write"</td>"
+				document.write"</form>"
+				document.write"<form action=INitiran.asp target=Right id=form2 name=form2>"
+				document.write"<td align=center valign=bottom>"
+					document.write"<input type=submit value=一覧 id=submit2 name=submit2>"
+				document.write"</td>"
+				document.write"</form>"
+			document.write"<tr>"
+		document.write"</table>"
+		document.write"</body>"
+		document.write"</html>"
+		'<% Response.Redirect "FinishEXCEL.asp" %>
+	  
+		' ファイルを保存する
+		' objExcelBook.Save
+		' objExcelApp.Quit
+	End If
+	
+//-->
+</SCRIPT>
+
+<%
+'End Sub
+	On error resume next
+	' --------------------------- 現在のスクリプトのURLパスを得る
+	Function GetURLPath()
+	Dim strURL, nP
+		  
+	strURL = "http://" & _
+	  Request.ServerVariables("SERVER_NAME")
+	If Request.ServerVariables("SERVER_PORT") <> "80" Then
+	  strURL = strURL & ":80"
+	End If
+	strURL = strURL & "/" & Request.ServerVariables("SCRIPT_NAME")
+	nP = InStrRev(strURL, "/")
+	If nP > 0 Then
+	  strURL = Left(strURL, nP)
+	End If
+	GetURLPath = strURL
+	End Function
+%>
+<%
+    w_rRs.Close
+	w_cCn.Close
+	Set w_rRs = Nothing
+	Set w_cCn = Nothing
+%>

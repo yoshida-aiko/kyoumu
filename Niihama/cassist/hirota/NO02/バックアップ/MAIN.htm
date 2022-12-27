@@ -1,0 +1,24 @@
+<HTML>
+
+<HEAD>
+<%
+	'----------------------------------------
+	'参照中のページをキャッシュさせない
+	'----------------------------------------
+	Response.Expires = 0
+	Response.AddHeader "Pragma", "No-Cache"
+	Response.AddHeader "Cache-Control", "No-Cache"
+%>
+
+<TITLE>社員管理</TITLE>
+<FRAMESET COLS="25%,75%">
+	<FRAME SRC="Menu.asp" name="Left" NORESIZE>
+	<FRAME SRC="Top.htm" name="Right">
+</FRAMESET>
+
+</HEAD>
+
+<BODY>
+</BODY>
+
+</HTML>

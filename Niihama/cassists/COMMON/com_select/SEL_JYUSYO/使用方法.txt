@@ -1,0 +1,36 @@
+    //************************************************************
+    //  [機能]  住所検索の使い方
+	//  [URL]	common/com_select/SEL_JYUSYO/default.asp
+    //  [引数]  なし
+    //  [戻値]  true:ﾁｪｯｸOK、false:ﾁｪｯｸｴﾗｰ
+    //  [説明] 	参考URL	：mst/mst0143/syusei.asp
+    //************************************************************
+
+		①準備するもの
+			1).<input type="text" name="txtYUBINBANGO">	'// 郵便番号
+			2).<input type="text" name="txtJUSYO1">		'// 住所1
+			3).<input type="text" name="txtJUSYO2">		'// 住所2
+			4).<input type="text" name="txtJUSYO3">		'// 住所3
+
+			5).<input type="hidden" name="txtKenCd"  >		'// 県コード
+			6).<input type="hidden" name="txtSityoCd">		'// 市町村コード
+			7).<input type="hidden" name="txtRenban" >		'// 連番
+
+			検索した結果が、1.2.3.4に入ります。
+			4は、NULLです。
+			5.6.7には、検索した結果のキーが入ります。
+			以降のページで使ってください。
+
+		②使い方
+			1).jf_ZipCodeSch('SEARCH')を呼びます
+				jf_ZipCodeSchの引数は
+					'SEARCH' = 検索
+					'DISPLAY'= 参照 です。
+
+				住所から郵便番号を検索する場合は、jf_ZipCodeSch('SEARCH') を
+				住所を参照する場合は、jf_ZipCodeSch('DISPLAY') としてください。
+
+				住所から郵便番号を検索する場合は、txtJUSYO1かtxtJUSYO2が
+				入力されている必要があります。
+
+			
