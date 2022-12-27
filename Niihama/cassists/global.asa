@@ -17,7 +17,7 @@ Sub Session_OnStart
 
 	'•Ï”‰Šú‰»
 	Session("USER_ID") = "S_NIIHAMA"
-	Session("PASS") = "CASSISTS"
+	Session("PASS") = "SCASSIST"
 	Session("CONNECT") = "XEPDB1"
     	
 End Sub

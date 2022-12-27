@@ -233,7 +233,10 @@ Public Function AutoOpen(m_oConObj,ByVal p_sDbName, ByVal p_sConnect)
     w_vSplit = Split(p_sConnect, "/")
 
     '/* ADO でｺﾈｸﾄ
-    m_oConObj.ConnectionString = "Provider=MSDAORA;"
+    '2022.12.27　UPD Yoshida　-->
+    ' m_oConObj.ConnectionString = "Provider=MSDAORA;"
+    m_oConObj.ConnectionString = "Provider=OraOLEDB.Oracle;"
+    '2022.12.27　UPD Yoshida　<--
     m_oConObj.ConnectionString = m_oConObj.ConnectionString & "Data Source=" & p_sDbName & ";"
     If Err <> 0 Then
         'ﾃﾞｰﾀﾍﾞｰｽとの接続に失敗
