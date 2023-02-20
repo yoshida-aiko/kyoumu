@@ -529,12 +529,19 @@ Sub showPage()
 		}
 
 		// ■学年
+		// 2023.02.17.UPD　Yoshida　担任の時にはメッセージを表示しないように修正
+	<%If m_sKengen <> C_KENGEN_SEI0300_TAN Then%>
 		if( f_Trim(document.frm.txtGakuNo.value) == "" ){
 			window.alert("学年の選択を行ってください");
 			document.frm.txtGakuNo.focus();
 			return ;
 		}
-	<%If m_sKengen <> C_KENGEN_SEI0300_GAK Then%>
+	<%End If%>
+
+	// 2023.02.17.UPD　Yoshida　
+	// 担任の時にはメッセージを表示しないように修正⇒FULL権限の時のみ表示
+	// <!--<--%If m_sKengen <> C_KENGEN_SEI0300_GAK Then%> 
+	<%If m_sKengen = C_KENGEN_SEI0300_FULL Then%>
 		// ■クラス
 		if( f_Trim(document.frm.txtClassNo.value) == "" ){
 			window.alert("クラスの選択を行ってください");
