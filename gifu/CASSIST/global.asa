@@ -1,0 +1,14 @@
+<SCRIPT LANGUAGE=VBScript RUNAT=Server>
+
+Sub Session_OnStart
+'** ‚±‚±‚ÉƒR[ƒh‚ğ“ü—Í‚µ‚Ü‚·**
+
+	'•Ï”‰Šú‰»
+	Session("USER_ID") = "GIFU"
+	Session("PASS") = "CASSIST"
+	Session("CONNECT") = "XEPDB1"
+
+End Sub
+
+</SCRIPT>
+
