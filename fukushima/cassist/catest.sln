@@ -1,0 +1,18 @@
+Microsoft Visual Studio Solution File, Format Version 1.00
+Project("{BDD4A1A1-7A1F-11D0-AC13-00A0C91E29D5}") = "10.0.1.6/CASSIST", "catest.vip", "{4BD59E60-0774-11D6-917C-0010DCB0447B}"
+	ProjectSection(SourceCodeControl) = preProject
+		SccAuxPath = 
+		WebServer = http://10.0.1.6
+		WebName = CASSIST
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(LocalDeployment) = postSolution
+		StartupProject = {4BD59E60-0774-11D6-917C-0010DCB0447B}
+	EndGlobalSection
+	GlobalSection(BuildOrder) = postSolution
+		0 = {4BD59E60-0774-11D6-917C-0010DCB0447B}
+	EndGlobalSection
+	GlobalSection(DeploymentRoot) = postSolution
+	EndGlobalSection
+EndGlobal

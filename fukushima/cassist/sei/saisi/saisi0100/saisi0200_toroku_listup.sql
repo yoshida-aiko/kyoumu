@@ -1,0 +1,48 @@
+
+w_sSql = ""
+w_sSql = w_sSql & " SELECT "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_MISYU_GAKUNEN,  "
+w_sSql = w_sSql & "		M05_CLASS.M05_CLASSMEI, "
+w_sSql = w_sSql & "		T11_GAKUSEKI.T11_SIMEI, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_NENDO, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_JYUKOKAISU, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_SEISEKI, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_SAISI_SEISEKI, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_SAISI_SEISEKI2, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_SAISI_SEISEKI3, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_SAISI_SEISEKI4, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_SAISI_SEISEKI5, "
+w_sSql = w_sSql & "		T120_SAISIKEN.T120_GAKUSEI_NO "
+
+w_sSql = w_sSql & " FROM "
+w_sSql = w_sSql & "		T120_SAISIKEN, "
+w_sSql = w_sSql & "		T11_GAKUSEKI, "
+w_sSql = w_sSql & "		T13_GAKU_NEN, "
+w_sSql = w_sSql & "		M05_CLASS, "
+w_sSql = w_sSql & "		M08_HYOKAKEISIKI "
+
+w_sSql = w_sSql & " WHERE "
+w_sSql = w_sSql & "		AND T120_SAISIKEN.T120_KAMOKU_CD = '" & Request("hidKAMOKU_CD") & "' "
+w_sSql = w_sSql & "		AND T120_SAISIKEN.T120_KYOUKAN_CD = '" & Session("KYOKAN_CD") & "' "
+
+'TABLEÇÃåãçáèåè
+w_sSql = w_sSql & "			T120_SAISIKEN.T120_GAKUSEI_NO = T11_GAKUSEKI.T11_GAKUSEI_NO "
+w_sSql = w_sSql & "		AND T120_SAISIKEN.T120_NENDO = T13_GAKU_NEN.T13_NENDO "
+w_sSql = w_sSql & "		AND T120_SAISIKEN.T120_GAKUSEI_NO = T13_GAKU_NEN.T13_GAKUSEI_NO "
+w_sSql = w_sSql & "		AND T13_GAKU_NEN.T13_NENDO = M05_CLASS.M05_NENDO "
+w_sSql = w_sSql & "		AND T13_GAKU_NEN.T13_GAKUNEN = M05_CLASS.M05_GAKUNEN "
+w_sSql = w_sSql & "		AND T13_GAKU_NEN.T13_CLASS = M05_CLASS.M05_CLASSNO "
+w_sSql = w_sSql & "		AND M08_NENDO = T120_NENDO"
+
+'ì_êîçiÇËçûÇ›
+w_sSql = w_sSql & "		AND T120_SAISIKEN.T120_HYOKA_FUKA_KBN = 1 "
+w_sSql = w_sSql & " 	AND M08_HYOUKA_NO = 2 "
+w_sSql = w_sSql & "		AND M08_HYOKA_TAISYO_KBN = 0 "
+w_sSql = w_sSql & "		AND M08_HYOKA_SYOBUNRUI_CD = 4 "
+w_sSql = w_sSql & " 	AND T120_SEISEKI <= M08_MAX "
+w_sSql = w_sSql & " 	AND T120_SEISEKI >= M08_MIN "
+
+w_sSql = w_sSql & "	ORDER BY"
+w_sSql = w_sSql & "		T13_GAKUNEN,"	
+w_sSql = w_sSql & "		T13_CLASS, "
+w_sSql = w_sSql & "		T13_SYUSEKI_NO1 "

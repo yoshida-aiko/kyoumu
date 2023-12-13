@@ -1,0 +1,40 @@
+<SCRIPT LANGUAGE=VBScript RUNAT=Server>
+
+'次の場合に自動的に実行する特別なイベント ハンドラを追加できます  
+'特別な Active Server Page イベントが発生した場合。これらのハンドラを作成するために 
+'以下のリスト内の使用したいイベントに対応する名前でサブリーチンを作成してください。 
+'例 Session_OnStart 用のイベント ハンドラを追加するには、
+'コメントを付けずに、以下のコードをこのファイルへ追加してください:
+'-----------------------------------------------------------------------------------------
+'EventName              説明
+'Session_OnStart        ユーザーがアプリケーションでページを最初に実行する際に起動します。
+'Session_OnEnd          ユーザーのセッションがタイム アウトするか、ユーザーがアプリケーションを終了する際に実行されます。
+'Application_OnStart    ユーザーにより、初めてアプリケーションの最初のページが実行される際に、一度のみ起動します。
+'Application_OnEnd      Web サーバーの終了時に、一度のみ実行されます。
+'-----------------------------------------------------------------------------------------
+Sub Session_OnStart
+'** ここにコードを入力します**
+
+	'変数初期化
+	Session("USER_ID") = "FUKUSHIMA"	
+	Session("PASS") = "CASSIST"
+	Session("CONNECT") = "XEPDB1"
+	'セッションのタイムアウト時間設定
+    Session.Timeout = 60
+    
+End Sub
+
+Sub Application_OnStart
+
+End Sub
+
+Sub Application_OnEnd
+
+End Sub
+
+Sub Session_OnEnd
+
+End Sub
+
+</SCRIPT>
+
