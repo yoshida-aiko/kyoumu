@@ -47,6 +47,7 @@
     Public m_iSyubetu		'出欠値集計方法
     Public m_TUKU_FLG
 	Public m_iJigenTani		'//１時限の単位数
+	Public m_sZokuseiCd		'属性コード Ins 2022/10/7 Yoshida
     
     Public m_iKamoku_Kbn
     Public m_iHissen_Kbn
@@ -54,6 +55,7 @@
 	Public m_Rs
 	Public m_DRs
 	Public m_SRs
+	Public m_Rs_Hyoka			'評価情報
 	
 	Dim m_iSouJyugyou		'総授業時間
 	DIm m_iJunJyugyou		'純授業時間
@@ -63,6 +65,7 @@
 	
 	Public	m_iShikenInsertType
 	Public m_FirstGakusekiNo
+	Public m_FirstSeisekiInp			'成績の入力方法
 	
 	m_iShikenInsertType = 0
 	
@@ -144,7 +147,17 @@ Sub Main()
 			m_bErrFlg = True
 			Exit Do
 		End If
-		
+
+		'//2022/10/7 Ins-->
+		'=================
+		'評価形式を取得
+		'=================
+		If f_GetHyokaInfo() <> 0 Then 
+				m_bErrFlg = True
+				Exit Do
+		End If
+		'//2022/10/7 Ins<--
+
 		'**********************************************************
 		'通常授業と特別活動で、とって来る場所が変わる。
 		'**********************************************************
@@ -225,6 +238,8 @@ Sub s_SetParam()
 	m_sGakkaCd	= request("txtGakkaCd")
 	m_iJigenTani = Session("JIKAN_TANI") '１時限の単位数
 	m_sSyubetu	= trim(Request("SYUBETU"))
+	m_sZokuseiCd	= request("txtZokuseiCd")	'Ins 2022/10/7 Yoshida
+	m_FirstSeisekiInp	= request("hidSeisekiInp")	'Ins 2022/10/14 Yoshida
 	
 End Sub
 
@@ -393,6 +408,60 @@ Function f_GetKamokuInfo(p_iKamoku_Kbn,p_iHissen_Kbn,p_ilevelFlg)
 
 End Function
 
+'2022/10/7 Yoshida Ins -->
+'********************************************************************************
+'*  [機能]  コンボで選択された科目の評価形式の評価を取得する
+'*  [引数]  なし
+'*  [戻値]  なし
+'*  [説明]  
+'********************************************************************************
+Function f_GetHyokaInfo()
+
+    Dim w_sSQL
+
+    On Error Resume Next
+    Err.Clear
+    
+    f_GetHyokaInfo = 1
+
+    Do 
+
+		w_sSQL = ""
+		w_sSQL = w_sSQL & vbCrLf & " SELECT "
+		w_sSQL = w_sSQL & vbCrLf & "   M08_HYOKA_SYOBUNRUI_CD"
+		w_sSQL = w_sSQL & vbCrLf & "  ,M08_HYOKA_SYOBUNRUI_MEI"
+		w_sSQL = w_sSQL & vbCrLf & "  ,M100_SEISEKI_INP"
+		w_sSQL = w_sSQL & vbCrLf & " FROM M08_HYOKAKEISIKI,M100_KAMOKU_ZOKUSEI "
+		w_sSQL = w_sSQL & vbCrLf & " WHERE "
+		w_sSQL = w_sSQL & vbCrLf & "      M08_HYOKAKEISIKI.M08_NENDO =" & cint(m_iNendo)
+		w_sSQL = w_sSQL & vbCrLf & "  AND M08_HYOKAKEISIKI.M08_HYOUKA_NO ='" & m_sZokuseiCd & "'"
+		w_sSQL = w_sSQL & vbCrLf & "  AND M08_HYOKAKEISIKI.M08_NENDO = M100_KAMOKU_ZOKUSEI.M100_NENDO"
+		w_sSQL = w_sSQL & vbCrLf & "  AND M08_HYOKAKEISIKI.M08_HYOUKA_NO = M100_KAMOKU_ZOKUSEI.M100_ZOKUSEI_CD"
+		w_sSQL = w_sSQL & vbCrLf & "  ORDER BY M08_HYOKA_SYOBUNRUI_CD"
+
+ 'response.write "w_sSQL" & w_sSQL
+
+        iRet = gf_GetRecordset(m_Rs_Hyoka, w_sSQL)
+        If iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            msMsg = Err.description
+            f_GetHyokaInfo = 99
+            Exit Do
+        End If
+
+		'//最初の評価の「M100_SEISEKI_INP」を取得する
+		if not m_Rs_Hyoka.EOF then
+			m_FirstSeisekiInp = Cint(gf_SetNull2Zero(m_Rs_Hyoka("M100_SEISEKI_INP")))
+			m_Rs_Hyoka.movefirst
+		end if
+'  response.write "m_FirstSeisekiInp" & m_FirstSeisekiInp
+
+        f_GetHyokaInfo = 0
+        Exit Do
+    Loop
+
+End Function
+'2022/10/7 Yoshida Ins -->
 
 '********************************************************************************
 '*	[機能]	データの取得
@@ -421,36 +490,45 @@ Dim w_iNyuNendo
 				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_TYUKAN_Z as SOUJI, A.T16_JUNJIKAN_TYUKAN_Z as JYUNJI, "
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_Z as DataKbn ,"
-				w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & "		D.T19_CHIKAI_TYUKAN_Z as ZenNendoCHIKAI ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_TYUKAN_Z as ZenNendoKEKA ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_TYUKAN_Z as ZenNendoKEKA_NASI ,"
-				'//INS 2022/03/09 吉田　再履修対応 ED
+				w_sSQL = w_sSQL & "		A.T16_HYOKA_TYUKAN_Z as HYOKA ," '//INS 2022/10/07 吉田
+				'2023.08.24 Del Kiyomoto  前年度成績は全試験で学年末を参照 -->
+				'w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
+				''//INS 2022/03/09 吉田　再履修対応 ST
+				'w_sSQL = w_sSQL & "		D.T19_CHIKAI_TYUKAN_Z as ZenNendoCHIKAI ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_TYUKAN_Z as ZenNendoKEKA ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_TYUKAN_Z as ZenNendoKEKA_NASI ,"
+				''//INS 2022/03/09 吉田　再履修対応 ED
+				'2023.08.24 Del 前年度成績は全試験で学年末を参照 <--
 				
 			Case C_SIKEN_ZEN_KIM
 				w_sSQL = w_sSQL & " 	A.T16_SEI_KIMATU_Z AS SEI,A.T16_KEKA_KIMATU_Z AS KEKA,A.T16_KEKA_NASI_KIMATU_Z AS KEKA_NASI,A.T16_CHIKAI_KIMATU_Z AS CHIKAI,A.T16_HYOKAYOTEI_KIMATU_Z AS HYOKAYOTEI, "
 				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_KIMATU_Z as SOUJI, A.T16_JUNJIKAN_KIMATU_Z as JYUNJI, "
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_Z as DataKbn,"
-				w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_Z as ZenNendoCHIKAI ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_Z as ZenNendoKEKA ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_Z as ZenNendoKEKA_NASI ,"
-				'//INS 2022/03/09 吉田　再履修対応 ED
+				w_sSQL = w_sSQL & "		A.T16_HYOKA_KIMATU_Z as HYOKA ," '//INS 2022/10/07 吉田
+				'2023.08.24 Del Kiyomoto  前年度成績は全試験で学年末を参照 -->
+				'w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_Z as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
+				''//INS 2022/03/09 吉田　再履修対応 ST
+				'w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_Z as ZenNendoCHIKAI ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_Z as ZenNendoKEKA ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_Z as ZenNendoKEKA_NASI ,"
+				''//INS 2022/03/09 吉田　再履修対応 ED
+				'2023.08.24 Del 前年度成績は全試験で学年末を参照 <--
 				
 			Case C_SIKEN_KOU_TYU
 				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_K AS SEI,A.T16_KEKA_TYUKAN_K AS KEKA,A.T16_KEKA_NASI_TYUKAN_K AS KEKA_NASI,A.T16_CHIKAI_TYUKAN_K AS CHIKAI,A.T16_HYOKAYOTEI_TYUKAN_K AS HYOKAYOTEI, "
 				w_sSQL = w_sSQL & "		A.T16_SOJIKAN_TYUKAN_K as SOUJI, A.T16_JUNJIKAN_TYUKAN_K as JYUNJI, "
 				
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_TYUKAN_K as DataKbn,"
-				w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & "		D.T19_CHIKAI_TYUKAN_K as ZenNendoCHIKAI ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_TYUKAN_K as ZenNendoKEKA ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_TYUKAN_K as ZenNendoKEKA_NASI ,"
+				w_sSQL = w_sSQL & "		A.T16_HYOKA_TYUKAN_K as HYOKA ," '//INS 2022/10/07 吉田
+				'2023.08.24 Del Kiyomoto  前年度成績は全試験で学年末を参照 -->
+				'w_sSQL = w_sSQL & "		D.T19_SEI_TYUKAN_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
+				''//INS 2022/03/09 吉田　再履修対応 ST
+				'w_sSQL = w_sSQL & "		D.T19_CHIKAI_TYUKAN_K as ZenNendoCHIKAI ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_TYUKAN_K as ZenNendoKEKA ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_TYUKAN_K as ZenNendoKEKA_NASI ,"
 				'//INS 2022/03/09 吉田　再履修対応 ED
+				'2023.08.24 Del 前年度成績は全試験で学年末を参照 <--
 				
 			Case C_SIKEN_KOU_KIM
 				w_sSQL = w_sSQL & " 	A.T16_SEI_TYUKAN_Z AS SEI_ZT,A.T16_KEKA_TYUKAN_Z AS KEKA_ZT,A.T16_KEKA_NASI_TYUKAN_Z AS KEKA_NASI_ZT,A.T16_CHIKAI_TYUKAN_Z AS CHIKAI_ZT,A.T16_HYOKAYOTEI_TYUKAN_Z AS HYOKAYOTEI_ZT, "
@@ -466,16 +544,26 @@ Dim w_iNyuNendo
 				w_sSQL = w_sSQL & "		A.T16_KOUSINBI_KIMATU_K,"
 
 				w_sSQL = w_sSQL & "		A.T16_DATAKBN_KIMATU_K as DataKbn,"
-				w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
+				w_sSQL = w_sSQL & "		A.T16_HYOKA_KIMATU_K as HYOKA ," '//INS 2022/10/07 吉田
+				'2023.08.24 Del Kiyomoto  前年度成績は全試験で学年末を参照 -->
+				'w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_K as ZenNendoSeiseki ,"	'//INS 2022/03/02 吉田　再履修対応
 
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_K as ZenNendoCHIKAI ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_K as ZenNendoKEKA ,"
-				w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_K as ZenNendoKEKA_NASI ,"
-				'//INS 2022/03/09 吉田　再履修対応 ED
+				''//INS 2022/03/09 吉田　再履修対応 ST
+				'w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_K as ZenNendoCHIKAI ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_K as ZenNendoKEKA ,"
+				'w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_K as ZenNendoKEKA_NASI ,"
+				''//INS 2022/03/09 吉田　再履修対応 ED
+				'2023.08.24 Del 前年度成績は全試験で学年末を参照 <--
 				
 		End Select
 		
+		'2023.08.24 Add Kiyomoto  前年度成績は全試験で学年末を参照 -->
+		w_sSQL = w_sSQL & "		D.T19_SEI_KIMATU_K as ZenNendoSeiseki ,"
+		w_sSQL = w_sSQL & "		D.T19_CHIKAI_KIMATU_K as ZenNendoCHIKAI ,"
+		w_sSQL = w_sSQL & "		D.T19_KEKA_KIMATU_K as ZenNendoKEKA ,"
+		w_sSQL = w_sSQL & "		D.T19_KEKA_NASI_KIMATU_K as ZenNendoKEKA_NASI ,"
+		'2023.08.24 Upd 前年度成績は全試験で学年末を参照 <--
+
 		w_sSQL = w_sSQL & " 	A.T16_GAKUSEI_NO AS GAKUSEI_NO,A.T16_GAKUSEKI_NO AS GAKUSEKI_NO,B.T11_SIMEI AS SIMEI "
 		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_SELECT_FLG "
 		w_sSQL = w_sSQL & vbCrLf & " ,A.T16_LEVEL_KYOUKAN "
@@ -493,36 +581,43 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & " 	   ,T11_SIMEI"
 		w_sSQL = w_sSQL & " 	   ,M05_CLASSMEI"
 		w_sSQL = w_sSQL & " 	   ,T13_RYUNEN_FLG"
-		Select Case m_sSikenKBN
-			Case C_SIKEN_ZEN_TYU
-				w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_Z"
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_TYUKAN_Z"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_TYUKAN_Z"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_TYUKAN_Z"
-				'//INS 2022/03/09 吉田　再履修対応 ED
-			Case C_SIKEN_ZEN_KIM
-				w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_Z"	
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_Z"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_Z"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_Z"
-				'//INS 2022/03/09 吉田　再履修対応 ED
-			Case C_SIKEN_KOU_TYU
-				w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_K"
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_TYUKAN_K"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_TYUKAN_K"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_TYUKAN_K"
-				'//INS 2022/03/09 吉田　再履修対応 ED
-			Case C_SIKEN_KOU_KIM
-				w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_K"
-				'//INS 2022/03/09 吉田　再履修対応 ST
-				w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_K"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_K"
-				w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_K"
-				'//INS 2022/03/09 吉田　再履修対応 ED
-		End Select
+		'2023.08.24 Upd Kiyomoto 前年度成績は全試験で学年末を参照 -->
+		'Select Case m_sSikenKBN
+		'	Case C_SIKEN_ZEN_TYU
+		'		w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_Z"
+		'		'//INS 2022/03/09 吉田　再履修対応 ST
+		'		w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_TYUKAN_Z"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_TYUKAN_Z"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_TYUKAN_Z"
+		'		'//INS 2022/03/09 吉田　再履修対応 ED
+		'	Case C_SIKEN_ZEN_KIM
+		'		w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_Z"	
+		'		'//INS 2022/03/09 吉田　再履修対応 ST
+		'		w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_Z"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_Z"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_Z"
+		'		'//INS 2022/03/09 吉田　再履修対応 ED
+		'	Case C_SIKEN_KOU_TYU
+		'		w_sSQL = w_sSQL & " 	   ,T19_SEI_TYUKAN_K"
+		'		'//INS 2022/03/09 吉田　再履修対応 ST
+		'		w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_TYUKAN_K"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_TYUKAN_K"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_TYUKAN_K"
+		'		'//INS 2022/03/09 吉田　再履修対応 ED
+		'	Case C_SIKEN_KOU_KIM
+		'		w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_K"
+		'		'//INS 2022/03/09 吉田　再履修対応 ST
+		'		w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_K"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_K"
+		'		w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_K"
+		'		'//INS 2022/03/09 吉田　再履修対応 ED
+		'End Select
+		w_sSQL = w_sSQL & " 	   ,T19_SEI_KIMATU_K"
+		w_sSQL = w_sSQL & " 	   ,T19_CHIKAI_KIMATU_K"
+		w_sSQL = w_sSQL & " 	   ,T19_KEKA_KIMATU_K"
+		w_sSQL = w_sSQL & " 	   ,T19_KEKA_NASI_KIMATU_K"
+		'2023.08.24 Upd 前年度成績は全試験で学年末を参照 <--
+
 		w_sSQL = w_sSQL & "	 	  FROM "
 		w_sSQL = w_sSQL & " 	  	T11_GAKUSEKI "
 		w_sSQL = w_sSQL & " 	   ,T13_GAKU_NEN "
@@ -1080,6 +1175,26 @@ Function f_GetKekaChi(p_iNendo,p_iSikenKBN,p_sKamokuCD,p_sGakusei,p_iKekka,p_iCh
 	
 End Function
 
+'2022/10/11 INS -->
+'****************************************************
+'[機能] データ1とデータ2が同じ時は "SELECTED" を返す
+'[引数] pData1 : データ１
+'       pData2 : データ２
+'[戻値] f_Selected : "SELECTED" OR ""
+'****************************************************
+Function f_Selected(pData1,pData2)
+
+    If IsNull(pData1) = False And IsNull(pData2) = False Then
+        If trim(cStr(pData1)) = trim(cstr(pData2)) Then
+            f_Selected = "selected" 
+        Else 
+            f_Selected = "" 
+        End If
+    End If
+
+End Function
+'2022/10/11 INS <--
+
 '********************************************************************************
 '*  [機能]  HTMLを出力
 '*  [引数]  なし
@@ -1233,7 +1348,12 @@ Sub showPage()
     //************************************************************
     function f_Touroku(){
 		var ob,w_num;
-		
+		var i;
+		var w_Hyoka;
+		var w_hidHyoka;
+		var indx;
+		var HyokaArray =[];
+
 		if(f_CheckData_All() == 1){
 	            alert("入力値が不正です");
 	            return 1;
@@ -1245,12 +1365,23 @@ Sub showPage()
 			
 			//ヘッダ部空白表示
 			parent.topFrame.document.location.href="white.asp";
-			
+				
 			//登録処理
+		if(document.frm.hidSeisekiInp.value == "<%=C_SEISEKI_INP_TYPE_STRING%>"){	
+			for (i = 1; i < document.frm.i_Max.value; i++) {
+				w_Hyoka = eval("document.frm.Hyoka"+(i));
+				indx = w_Hyoka.selectedIndex;
+				//m_SeisekiIndex =  w_Hyoka.options[indx].value;
+				HyokaArray[i-1] =  w_Hyoka.options[indx].value;
+			}
+			 //alert(HyokaArray);
+		}
 		<% if m_TUKU_FLG = C_TUKU_FLG_TUJO then %>
+			document.frm.hidHyoka.value = HyokaArray;
 			document.frm.hidUpdMode.value = "TUJO";
 			document.frm.action="sei0100_upd.asp";
 		<% Else %>
+			// document.frm.hidHyoka.value = HyokaArray;
 			document.frm.hidUpdMode.value = "TOKU";
 			document.frm.action="sei0100_upd_toku.asp";
 		<% End if %>
@@ -1565,7 +1696,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 		f_GetTotalAvg();
 		
 	}
-	
+		
 	//-->
 	</SCRIPT>
 	</head>
@@ -1932,26 +2063,48 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<% If CInt(gf_SetNull2Zero(m_Rs("Menjo"))) = 1 Then %>
 							<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>><font size="2"><%=w_sSeiseki%></font></td>
 						<%Else%>
-							<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
-								<input type="text" <%=w_sInputClass1%> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
-							</td>
+							<%' 2022.10.14 高専間単位互換対応 UPD-->%>
+							<%' 点数(成績)入力と文字入力で処理を分岐--%>
+							<% If m_FirstSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then%>
+								<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>>
+									<input type="text" <%=w_sInputClass1%> name="Seiseki<%=i%>" value="<%=w_sSeiseki%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Seiseki',this.form,<%=i%>)" onChange="f_GetTotalAvg()" <%=w_Disabled2%>>
+								</td>
+							<% Else%>
+								<td class="<%=w_cell%>" width="50"align="center" nowrap <%=w_Padding%>><font size="2"><%=w_sSeiseki%></font></td>
+							<% End If%>
+							<%' 2022.10.14 高専間単位互換対応 UPD<--%>
 						<%End If%>
 						<%' 2022.03.04 再履修対応 UPD ED%>
 
 						<%' 2022.03.04 再履修対応 Ins ST%>
 						<td class="<%=w_cell%>" align="center" width="50" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("ZenNendoSeiseki"))%></td>
 						<%' 2022.03.04 再履修対応 Ins ED%>
-						
-						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
-								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>>
-									<input type="button" size="2" name="button<%=i%>" value="<%=w_sHyoka%>" onClick="return f_change(<%=i%>)" class="<%=w_cell%>" style="text-align:center">
-								</td>
-								<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
-						<%Else%>
-								<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>><%=w_sHyoka%></td>
-								<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
-						<%End If%>
-							
+						<%' 2022.10.14 高専間単位互換対応 UPD-->%>
+						<%' 点数(成績)入力と文字入力で処理を分岐%>
+						<% If m_FirstSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then%>
+							<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>	
+									<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>>
+										<input type="button" size="2" name="button<%=i%>" value="<%=w_sHyoka%>" onClick="return f_change(<%=i%>)" class="<%=w_cell%>" style="text-align:center">
+									</td>
+									<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
+							<%Else%>
+									<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>><%=w_sHyoka%></td>
+									<input type="hidden" name="Hyoka<%=i%>" value="<%=trim(w_sHyoka)%>">
+							<%End If%>
+						<% Else%>
+							<%' 成績が点数表示でない場合%>
+							<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>>
+								<select name="Hyoka<%=i%>" style='width:50px;' onchange="">
+									<option value="@@@" selected >  </option>
+									<%Do Until m_Rs_Hyoka.EOF%>
+										<option value='<%=m_Rs_Hyoka("M08_HYOKA_SYOBUNRUI_MEI")%>'  <%=f_Selected(cstr(m_Rs_Hyoka("M08_HYOKA_SYOBUNRUI_MEI")),cstr(m_Rs("HYOKA")))%>><%=m_Rs_Hyoka("M08_HYOKA_SYOBUNRUI_MEI")%></option>									
+										<%m_Rs_Hyoka.MoveNext%>
+									<%Loop%>
+									<%m_Rs_Hyoka.MoveFirst%>
+							</td>
+						<% End If%>
+						<%' 2022.10.14 高専間単位互換対応 UPD<--%>	
+
 							<td class="<%=w_cell%>" width="55" align="center" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="55" align="right"  nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
 							<%' 2022.03.08 再履修対応 Ins ST%>
@@ -1966,7 +2119,7 @@ if (w_KekkaGai){		//2001/12/17 Add
 							<%' 2022.03.08 再履修対応 Ins ED%>
 					<%Else%>
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
-							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>	<%'-- 2022.03.04 再履修対応 Ins-- %>
+							<!--<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>	<%'-- 2022.03.04 再履修対応 Ins-- %>　2022.06.22 Del 特別活動の場合前年成績不要-->
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
 							<td class="<%=w_cell%>" width="100" nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="80"  nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
@@ -1998,11 +2151,18 @@ if (w_KekkaGai){		//2001/12/17 Add
 						<%' 2022.03.04 再履修対応 Ins ST%>
 						<td class="<%=w_cell%>" align="right" width="50" nowrap <%=w_Padding%>><font size="2"><%=gf_HTMLTableSTR(m_Rs("ZenNendoSeiseki"))%></font></td>
 						<%' 2022.03.04 再履修対応 Ins ED%>
-						<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
-								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
+						<%' 2022.10.11 高専間単位互換対応 UPD-->%>
+						<% If m_FirstSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then%>
+							<%' 点数(成績)入力と文字入力で処理を分岐%>
+							<%If m_sSikenKBN = C_SIKEN_ZEN_TYU or m_sSikenKBN = C_SIKEN_KOU_TYU Then%>
+									<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
+							<%Else%>
+									<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
+							<%End If%>
 						<%Else%>
-								<td class="<%=w_cell%>"  width="50" align="center" nowrap <%=w_Padding%>><%=trim(w_sHyoka)%></td>
+							<td class="<%=w_cell%>" width="50" align="center" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(m_Rs("HYOKA"))%></td>
 						<%End If%>
+						<%' 2022.10.11 高専間単位互換対応 UPD<--%>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="55" align="right" nowrap <%=w_Padding%>><%=gf_HTMLTableSTR(w_sChikaisu)%></td>
 						<%' 2022.03.08 再履修対応 Ins ST%>
@@ -2102,6 +2262,10 @@ if (w_KekkaGai){		//2001/12/17 Add
 	<input type="hidden" name="hidSchoolFlg" value ="<%=m_SchoolFlg%>">
 	<!-- 2022/03/17 追加 -->
 	<input type="hidden" name="scrollbarWidth" value="<%=scrollbarWidth%>">
+	<!-- 2022/10/11 追加 -->
+	<input type="hidden" name="hidHyoka" value="">
+	<input type="hidden" name="hidSeisekiInp" value="<%=m_FirstSeisekiInp%>">
+	<input type="hidden" name="txtZokuseiCd" value="<%=m_sZokuseiCd%>">
 	</FORM>
 	</center>
 	</body>

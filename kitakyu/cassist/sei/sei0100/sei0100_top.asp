@@ -25,6 +25,8 @@
 ' 変      更: 2017/12/27 清本          後期期末の科目の並び順を追加
 ' 変      更: 2018/08/06 清本          クラス学科以外の学科(旧学科)はクラス学科のコースでコースを限定しない
 ' 変      更: 2019/02/12 清本          後期期末試験時もクラス学科以外の学科(旧学科)はクラス学科のコースでコースを限定しない
+' 変      更: 2023/02/10 清本          後期期末試験時も評価形式文字入力対応を行う
+' 変      更: 2023/02/15 清本          留学生代替え科目時も評価形式文字入力対応を行う
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -249,6 +251,14 @@ Function f_GetKamoku()
 					w_sJiki = C_KAI_KOUKI
 				Case C_SIKEN_KOU_KIM
 					w_sJiki = C_KAI_KOUKI
+				'2021.12.23 Ins yoshida ST
+				Case C_SIKEN_SAISI
+					w_sJiki = C_KAI_KOUKI
+				'2021.12.23 Ins yoshida ED
+				'2022.2.22 Ins yoshida ST
+				Case C_SIKEN_KARISINKYU
+					w_sJiki = C_KAI_KOUKI
+				'2021.2.22 Ins yoshida ED
 			End Select
 
 			w_sSQL = ""
@@ -260,6 +270,7 @@ Function f_GetKamoku()
 			w_sSQL = w_sSQL & vbCrLf & " ,CLASSMEI"
 			w_sSQL = w_sSQL & vbCrLf & " ,GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " ,KAMOKUMEI"
+			w_sSQL = w_sSQL & vbCrLf & " ,ZOKUSEI_CD" 	'2022/09/30 INS Yoshida
 			w_sSQL = w_sSQL & vbCrLf & " FROM ("
 
 			
@@ -317,14 +328,20 @@ Function f_GetKamoku()
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASSMEI AS CLASSMEI"
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD AS GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " 	,T16_KAMOKUMEI AS KAMOKUMEI"
+			w_sSQL = w_sSQL & vbCrLf & " 	,Max(M03_ZOKUSEI_CD) AS ZOKUSEI_CD"	'2022/09/30 INS Yoshida
 			w_sSQL = w_sSQL & vbCrLf & " FROM"
 			w_sSQL = w_sSQL & vbCrLf & " 	T27_TANTO_KYOKAN "
 			w_sSQL = w_sSQL & vbCrLf & " 	,T16_RISYU_KOJIN "
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASS "
+			w_sSQL = w_sSQL & vbCrLf & " 	,M03_KAMOKU "	'2022/09/30 INS Yoshida
 			w_sSQL = w_sSQL & vbCrLf & " WHERE "
 			w_sSQL = w_sSQL & vbCrLf & " 		T27_NENDO = M05_NENDO "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = M05_GAKUNEN "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_CLASS = M05_CLASSNO	"
+			'2022/09/30 INS Yoshida -->
+			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = M03_KAMOKU_CD(+)"
+			w_sSQL = w_sSQL & vbCrLf & "    AND T27_NENDO = M03_NENDO(+)"
+			'2022/09/30 INS Yoshida <--
 '			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T16_KAMOKU_CD(+)"
 
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T16_KAMOKU_CD"
@@ -371,13 +388,19 @@ Function f_GetKamoku()
 			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASSMEI AS CLASSMEI"
 			w_sSQL = w_sSQL & vbCrLf & " ,M05_GAKKA_CD AS GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " ,T15_KAMOKUMEI AS KAMOKUMEI"
+			w_sSQL = w_sSQL & vbCrLf & " ,Max(M03_ZOKUSEI_CD) AS ZOKUSEI_CD" '2022/09/30 INS Yoshida
 			w_sSQL = w_sSQL & vbCrLf & "  FROM"
 			w_sSQL = w_sSQL & vbCrLf & "  T26_SIKEN_JIKANWARI"
 			w_sSQL = w_sSQL & vbCrLf & " ,T15_RISYU"
 			w_sSQL = w_sSQL & vbCrLf & " ,M05_CLASS"
+			w_sSQL = w_sSQL & vbCrLf & " ,M03_KAMOKU "	'2022/09/30 INS Yoshida
 			w_sSQL = w_sSQL & vbCrLf & "  WHERE T26_NENDO = M05_NENDO(+)"
 			w_sSQL = w_sSQL & vbCrLf & "    AND T26_GAKUNEN = M05_GAKUNEN(+)"
 			w_sSQL = w_sSQL & vbCrLf & "    AND T26_CLASS = M05_CLASSNO(+)"
+			'2022/09/30 INS Yoshida -->
+			w_sSQL = w_sSQL & vbCrLf & "    AND T26_KAMOKU = M03_KAMOKU_CD(+)"
+			w_sSQL = w_sSQL & vbCrLf & "    AND T26_NENDO = M03_NENDO(+)"
+			'2022/09/30 INS Yoshida <--
 			w_sSQL = w_sSQL & vbCrLf & "    AND T26_KAMOKU = T15_KAMOKU_CD(+)"
 '2014/10/17 DEL 浦川	w_sSQL = w_sSQL & vbCrLf & "    AND M05_GAKKA_CD = T15_GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & "    AND T15_NYUNENDO(+) = T26_NENDO - T26_GAKUNEN + 1"
@@ -414,12 +437,18 @@ Function f_GetKamoku()
 		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_CLASSMEI AS CLASSMEI, "
 		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_GAKKA_CD AS GAKKA_CD, "
 		w_sSQL = w_sSQL & vbCrLf & "  M41_TOKUKATU.M41_MEISYO AS KAMOKUMEI "
+		w_sSQL = w_sSQL & vbCrLf & " ,M03_ZOKUSEI_CD AS ZOKUSEI_CD" '2022/09/30 INS Yoshida
 		w_sSQL = w_sSQL & vbCrLf & " FROM "
 		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI ,M05_CLASS,M41_TOKUKATU"
+		w_sSQL = w_sSQL & vbCrLf & "  ,M03_KAMOKU "	'2022/09/30 INS Yoshida
 		w_sSQL = w_sSQL & vbCrLf & " WHERE "
 		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS = M05_CLASS.M05_CLASSNO "
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKUNEN = M05_CLASS.M05_GAKUNEN"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M05_CLASS.M05_NENDO "
+		'2022/09/30 INS Yoshida -->
+		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KAMOKU = M03_KAMOKU.M03_KAMOKU_CD(+) "	'2023.02.16 Upd Kiyomoto 特別活動が出ないのでleft Joinに変更
+		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M03_KAMOKU.M03_NENDO(+) "		'2023.02.16 Upd Kiyomoto 特別活動が出ないのでleft Joinに変更
+		'2022/09/30 INS Yoshida <--
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KAMOKU = M41_TOKUKATU.M41_TOKUKATU_CD "
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M41_TOKUKATU.M41_NENDO "
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO=" & m_iNendo & " "
@@ -444,8 +473,8 @@ end if
 '2014/07/28 DEL 浦川
 '		w_sSQL = w_sSQL & vbCrLf & "  )"
 
-'response.write "w_sSQL" & w_sSQL
-'response.end
+' response.write "w_sSQL" & w_sSQL
+' response.end
 
         iRet = gf_GetRecordset(m_Rs, w_sSQL)
         If iRet <> 0 Then
@@ -497,6 +526,7 @@ Function f_GetRyuDaigae(p_sikenKBN)
         w_sSQL = w_sSQL & "     T27.T27_KAMOKU_CD, "
         w_sSQL = w_sSQL & "     T27.T27_KYOKAN_CD, "
         w_sSQL = w_sSQL & "     T16.T16_KAMOKUMEI, "
+        w_sSQL = w_sSQL & "     M03.M03_ZOKUSEI_CD AS ZOKUSEI_CD,"	'2023/02/15 Add Kiyomoto
         w_sSQL = w_sSQL & "     T16.T16_OKIKAE_FLG,"
         w_sSQL = w_sSQL & "     T13_CLASS "
         w_sSQL = w_sSQL & " FROM "
@@ -504,6 +534,7 @@ Function f_GetRyuDaigae(p_sikenKBN)
         w_sSQL = w_sSQL & "     T27_TANTO_KYOKAN T27 ,"
         w_sSQL = w_sSQL & "     M05_CLASS M05,"
         w_sSQL = w_sSQL & "     T13_GAKU_NEN T13 "
+        w_sSQL = w_sSQL & "     ,M03_KAMOKU M03 "	'2023/02/15 Add Kiyomoto
         w_sSQL = w_sSQL & " WHERE "
         w_sSQL = w_sSQL & "     T27.T27_KYOKAN_CD 	= '"	&	m_sKyokanCd			&	"' AND "
         w_sSQL = w_sSQL & "     T16.T16_OKIKAE_FLG 	= "		&	C_TIKAN_KAMOKU_SAKI	&	"  AND "
@@ -517,6 +548,10 @@ Function f_GetRyuDaigae(p_sikenKBN)
         w_sSQL = w_sSQL & "     T27.T27_NENDO      = M05.M05_NENDO AND "
         w_sSQL = w_sSQL & "     T27.T27_GAKUNEN    = M05.M05_GAKUNEN AND "
         w_sSQL = w_sSQL & "     T27.T27_CLASS      = M05.M05_CLASSNO "
+        '2023/02/15 Add Kiyomoto -->
+        w_sSQL = w_sSQL & "     AND T27.T27_KAMOKU_CD = M03.M03_KAMOKU_CD(+) "
+        w_sSQL = w_sSQL & "     AND T27.T27_NENDO = M03.M03_NENDO(+) "
+        '2023/02/15 Add Kiyomoto <--
 
 'response.write w_ssql
 'response.end
@@ -626,6 +661,7 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & " ,CLASSMEI"
 			w_sSQL = w_sSQL & vbCrLf & " ,GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " ,KAMOKUMEI"
+			w_sSQL = w_sSQL & vbCrLf & " ,ZOKUSEI_CD" 	'2023/02/10 Add Kiyomoto
 			w_sSQL = w_sSQL & vbCrLf & "  FROM"
 
 			w_sSQL = w_sSQL & vbCrLf & "("
@@ -677,15 +713,20 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASSMEI AS CLASSMEI"
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_GAKKA_CD AS GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & " 	,T16_KAMOKUMEI AS KAMOKUMEI"
+			w_sSQL = w_sSQL & vbCrLf & " 	,Max(M03_ZOKUSEI_CD) AS ZOKUSEI_CD"	'2023/02/10 Add Kiyomoto
 			w_sSQL = w_sSQL & vbCrLf & " FROM"
 			w_sSQL = w_sSQL & vbCrLf & " 	T27_TANTO_KYOKAN "
 			w_sSQL = w_sSQL & vbCrLf & " 	,T16_RISYU_KOJIN "
 			w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASS "
+			w_sSQL = w_sSQL & vbCrLf & " 	,M03_KAMOKU "	'2023/02/10 Add Kiyomoto
 			w_sSQL = w_sSQL & vbCrLf & " WHERE "
 			w_sSQL = w_sSQL & vbCrLf & " 		T27_NENDO = M05_NENDO "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_GAKUNEN = M05_GAKUNEN "
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_CLASS = M05_CLASSNO	"
-
+			'2023/02/10 Add Kiyomoto -->
+			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = M03_KAMOKU_CD(+)"
+			w_sSQL = w_sSQL & vbCrLf & "    AND T27_NENDO = M03_NENDO(+)"
+			'2023/02/10 Add Kiyomoto <--
 '			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T16_KAMOKU_CD(+)"
 
 			w_sSQL = w_sSQL & vbCrLf & "    AND T27_KAMOKU_CD = T16_KAMOKU_CD"
@@ -729,14 +770,20 @@ Function f_GetKamoku_Nenmatu()
 			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_CLASSMEI AS CLASSMEI "
 			w_sSQL = w_sSQL & vbCrLf & "  ,M05.M05_GAKKA_CD AS GAKKA_CD "
 			w_sSQL = w_sSQL & vbCrLf & "  ,T15.T15_KAMOKUMEI AS KAMOKUMEI "
+			w_sSQL = w_sSQL & vbCrLf & " ,Max(M03_ZOKUSEI_CD) AS ZOKUSEI_CD" '2023/02/10 Add Kiyomoto
 			w_sSQL = w_sSQL & vbCrLf & " FROM "
 			w_sSQL = w_sSQL & vbCrLf & "  T26_SIKEN_JIKANWARI T26"
 			w_sSQL = w_sSQL & vbCrLf & "  ,T15_RISYU T15"
 			w_sSQL = w_sSQL & vbCrLf & "  ,M05_CLASS M05"
+			w_sSQL = w_sSQL & vbCrLf & "  ,M03_KAMOKU "	'2023/02/10 Add Kiyomoto
 			w_sSQL = w_sSQL & vbCrLf & " WHERE "
 			w_sSQL = w_sSQL & vbCrLf & "   T26.T26_CLASS = M05.M05_CLASSNO "
 			w_sSQL = w_sSQL & vbCrLf & "  AND T26.T26_GAKUNEN = M05.M05_GAKUNEN "
 			w_sSQL = w_sSQL & vbCrLf & "  AND T26.T26_NENDO = M05.M05_NENDO "
+			'2023/02/10 Add Kiyomoto -->
+			w_sSQL = w_sSQL & vbCrLf & "  AND T26_KAMOKU = M03_KAMOKU_CD(+)"
+			w_sSQL = w_sSQL & vbCrLf & "  AND T26_NENDO = M03_NENDO(+)"
+			'2023/02/10 Add Kiyomoto <--
 			w_sSQL = w_sSQL & vbCrLf & "  AND T26.T26_KAMOKU = T15.T15_KAMOKU_CD(+)"
 			w_sSQL = w_sSQL & vbCrLf & "  AND M05.M05_GAKKA_CD = T15.T15_GAKKA_CD"
 			w_sSQL = w_sSQL & vbCrLf & "  AND T15.T15_NYUNENDO(+) = T26.T26_NENDO - T26.T26_GAKUNEN + 1"
@@ -769,12 +816,18 @@ Function f_GetKamoku_Nenmatu()
 		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_CLASSMEI AS CLASSMEI, "
 		w_sSQL = w_sSQL & vbCrLf & "  M05_CLASS.M05_GAKKA_CD AS GAKKA_CD, "
 		w_sSQL = w_sSQL & vbCrLf & "  M41_TOKUKATU.M41_MEISYO AS KAMOKUMEI "
+		w_sSQL = w_sSQL & vbCrLf & " ,M03_ZOKUSEI_CD AS ZOKUSEI_CD" '2023/02/10 Add Kiyomoto
 		w_sSQL = w_sSQL & vbCrLf & " FROM "
 		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI ,M05_CLASS,M41_TOKUKATU"
+		w_sSQL = w_sSQL & vbCrLf & "  ,M03_KAMOKU "	'2023/02/10 Add Kiyomoto
 		w_sSQL = w_sSQL & vbCrLf & " WHERE "
 		w_sSQL = w_sSQL & vbCrLf & "  T20_JIKANWARI.T20_CLASS = M05_CLASS.M05_CLASSNO "
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_GAKUNEN = M05_CLASS.M05_GAKUNEN"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M05_CLASS.M05_NENDO "
+		'2023/02/10 Add Kiyomoto -->
+		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KAMOKU = M03_KAMOKU.M03_KAMOKU_CD(+) "	'2023.02.16 Upd Kiyomoto 特別活動が出ないのでleft Joinに変更
+		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M03_KAMOKU.M03_NENDO(+) "		'2023.02.16 Upd Kiyomoto 特別活動が出ないのでleft Joinに変更
+		'2023/02/10 Add Kiyomoto <--
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_KAMOKU = M41_TOKUKATU.M41_TOKUKATU_CD "
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO = M41_TOKUKATU.M41_NENDO "
 		w_sSQL = w_sSQL & vbCrLf & "  AND T20_JIKANWARI.T20_NENDO=" & m_iNendo & " "
@@ -1238,6 +1291,7 @@ Sub showPage()
         document.frm.txtUpdDate.value=vl[4];
         document.frm.SYUBETU.value=vl[5];
         document.frm.txtKamokuNM.value=vl[6];
+        document.frm.txtZokuseiCd.value=vl[7]; //2022/09/30 INS
 
         return 0;
 	}
@@ -1273,6 +1327,7 @@ Sub showPage()
 		Dim w_sGakkaCd_s
 		Dim w_sKamokuCd_s
 		Dim w_sKamokuNM_s
+		Dim w_sZokuseiCd_s '2022/10/7 INS
 
 		call gs_title(" 成績登録 "," 登　録 ") %>
 <br>
@@ -1348,7 +1403,7 @@ Sub showPage()
 													end if
 													
 											%>
-											<option value="<%=m_Rs("GAKUNEN") & "#@#" & m_Rs("CLASS") & "#@#" & m_Rs("KAMOKU") & "#@#" & m_Rs("GAKKA_CD") & "#@#" & gf_GetT16UpdDate(m_iNendo,m_Rs("GAKUNEN"),m_Rs("GAKKA_CD"),m_Rs("KAMOKU"),"") & "#@#" & w_TukuName & "#@#" & m_Rs("KAMOKUMEI")%>"  ><%=w_Str%>
+											<option value="<%=m_Rs("GAKUNEN") & "#@#" & m_Rs("CLASS") & "#@#" & m_Rs("KAMOKU") & "#@#" & m_Rs("GAKKA_CD") & "#@#" & gf_GetT16UpdDate(m_iNendo,m_Rs("GAKUNEN"),m_Rs("GAKKA_CD"),m_Rs("KAMOKU"),"") & "#@#" & w_TukuName & "#@#" & m_Rs("KAMOKUMEI") & "#@#" & m_Rs("ZOKUSEI_CD")%>"  ><%=w_Str%>
 
 											<%
 											'2002/02/21 追加 ITO 成績データの更新日を取得するためのKEYを退避
@@ -1356,6 +1411,7 @@ Sub showPage()
 											w_sGakkaCd_s = m_Rs("GAKKA_CD")
 											w_sKamokuCd_s = m_Rs("KAMOKU")
 											w_sKamokuNM_s = m_Rs("KAMOKUMEI")
+											w_sZokuseiCd_s = m_Rs("ZOKUSEI_CD") '2022/09/30 INS
 											%>
 
 											<%m_Rs.MoveNext%>
@@ -1371,9 +1427,22 @@ Sub showPage()
 													w_Str= w_Str & ""
 													w_Str= w_Str & "　　　"
 													w_Str= w_Str & m_Rs_Ryu("T16_KAMOKUMEI") & "　"	
+													
+													'2023/02/15 Add Kiyomoto -->
+													'Dim w_TUKU_FLG,w_TukuName
+													
+													w_TUKU_FLG = 0
+													
+													Call f_getTUKU(m_iNendo,m_Rs("KAMOKU"),m_Rs("GAKUNEN"),m_Rs("CLASS"),w_TUKU_FLG)
+													
+													if cint(gf_SetNull2Zero(w_TUKU_FLG)) = 1 then
+														w_TukuName = "TOKU"
+													else
+														w_TukuName = "TUJO"
+													end if
+													'2023/02/15 Add Kiyomoto <--
 												%>
-												<option value="<%=m_Rs_Ryu("T27_GAKUNEN") & "#@#" & m_Rs_Ryu("T27_CLASS") & "#@#" & m_Rs_Ryu("T27_KAMOKU_CD") & "#@#" & m_Rs_Ryu("M05_GAKKA_CD") & "#@#" & gf_GetT16UpdDate(m_iNendo,m_Rs_Ryu("T27_GAKUNEN"),m_Rs_Ryu("M05_GAKKA_CD"),m_Rs_Ryu("T27_KAMOKU_CD"),"") & "#@#" & m_Rs_Ryu("T16_KAMOKUMEI")%>"><%=w_Str%>
-
+												<option value="<%=m_Rs_Ryu("T27_GAKUNEN") & "#@#" & m_Rs_Ryu("T27_CLASS") & "#@#" & m_Rs_Ryu("T27_KAMOKU_CD") & "#@#" & m_Rs_Ryu("M05_GAKKA_CD") & "#@#" & gf_GetT16UpdDate(m_iNendo,m_Rs_Ryu("T27_GAKUNEN"),m_Rs_Ryu("M05_GAKKA_CD"),m_Rs_Ryu("T27_KAMOKU_CD"),"") & "#@#" & w_TukuName  & "#@#" & m_Rs_Ryu("T16_KAMOKUMEI") & "#@#" & m_Rs_Ryu("ZOKUSEI_CD")%>"><%=w_Str%>
 
 											<%
 											'2002/02/21 追加 ITO 成績データの更新日を取得するためのKEYを退避
@@ -1381,6 +1450,7 @@ Sub showPage()
 											w_sGakkaCd_s = m_Rs_Ryu("M05_GAKKA_CD")
 											w_sKamokuCd_s = m_Rs_Ryu("T27_KAMOKU_CD")
 											w_sKamokuNM_s = m_Rs_Ryu("T16_KAMOKUMEI")
+											w_sZokuseiCd_s = m_Rs_Ryu("ZOKUSEI_CD") '2023/02/15 Add Kiyomoto
 											%>
 
 											<%	Else
@@ -1422,7 +1492,8 @@ Sub showPage()
 	<input type="hidden" name="txtKamokuNM" value="<%=w_sKamokuNM_s%>">
 	<input type="hidden" name="txtGakkaCd" value="<%=w_sGakkaCd_s%>">
 	<input type="hidden" name="txtTable" value="<%=m_sGetTable%>">
-	
+	<input type="hidden" name="txtZokuseiCd" value="<%=w_sZokuseiCd_s%>">
+
 	<input type="hidden" name="SYUBETU" value="">
 	
 	</form>

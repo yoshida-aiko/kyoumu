@@ -36,6 +36,7 @@
     Dim     m_sGakkaCd	'//学科
     Dim     m_SchoolFlg
     Dim     m_SQL
+	Dim     hidHyoka	'//評価
 
 '///////////////////////////メイン処理/////////////////////////////
 
@@ -87,14 +88,13 @@ Sub Main()
 
 	'// 不正アクセスチェック
 	Call gf_userChk(session("PRJ_No"))
-		
 		'// 成績登録
         w_iRet = f_Update(m_sSikenKBN)
         If w_iRet <> 0 Then
             m_bErrFlg = True
             Exit Do
         End If
-
+	 
 '// Del_s 2018/03/22 Nishimura
 '//		'//試験区分が前期期末の時は、その科目が前期のみか通年かを調べる
 '//		'//前期のみの場合は、取得したデータを後期期末試験にも登録する
@@ -148,6 +148,8 @@ Dim i
 Dim w_Today
 Dim w_DataKbnFlg
 Dim w_DataKbn
+Dim w_HyokaArray
+Dim w_iSeisekiInp
 	
     On Error Resume Next
     Err.Clear
@@ -155,7 +157,10 @@ Dim w_DataKbn
     f_Update = 99
 	w_DataKbnFlg = false
 	w_DataKbn = 0
-	
+	w_HyokaArray = split(Trim(request("hidHyoka")),",")
+	'response.write  "w_HyokaArray:" & w_HyokaArray(0)
+	w_iSeisekiInp = request("hidSeisekiInp")
+
     Do 
 		w_Today = gf_YYYY_MM_DD(m_iNendo & "/" & month(date()) & "/" & day(date()),"/")
 		
@@ -211,8 +216,17 @@ Dim w_DataKbn
 						else
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_SEI_TYUKAN_Z		= " & f_CnvNumNull(request("Seiseki"&i)) & ", "
 						end if
-						
-						w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_TYUKAN_Z	= '" & request("Hyoka"&i) & "', "
+						'2022/10/14 UPD 成績入力方法で処理を分岐　-->
+						if w_iSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then
+							w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_TYUKAN_Z	= '" & request("Hyoka"&i) & "', "
+						else
+							if  w_HyokaArray(i-1) = "@@@" then
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_TYUKAN_Z		= NULL, "
+							else
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_TYUKAN_Z		= '" & w_HyokaArray(i-1) & "', "
+							end if
+						end if
+						'2022/10/14 UPD　<--
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_TYUKAN_Z		= " & f_CnvNumNull(request("Kekka"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_NASI_TYUKAN_Z	= " & f_CnvNumNull(request("KekkaGai"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_CHIKAI_TYUKAN_Z		= " & f_CnvNumNull(request("Chikai"&i)) & ", "
@@ -237,7 +251,18 @@ Dim w_DataKbn
 						else
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_SEI_KIMATU_Z		= " & f_CnvNumNull(request("Seiseki"&i)) & ", "
 						end if
-						w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_KIMATU_Z	= '" & request("Hyoka"&i) & "', "
+						'response.write "w_HyokaArray(i-1):" &  w_HyokaArray(i-1)
+						'2022/10/14 UPD 成績入力方法で処理を分岐　-->
+						if w_iSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then
+							w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_KIMATU_Z	= '" & request("Hyoka"&i) & "', "
+						else	
+							if  w_HyokaArray(i-1) = "@@@" then
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_KIMATU_Z		= NULL, "
+							else
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_KIMATU_Z		= '" & w_HyokaArray(i-1) & "', "
+							end if
+						end if
+						'2022/10/14 UPD　<--
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_KIMATU_Z		= " & f_CnvNumNull(request("Kekka"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_NASI_KIMATU_Z	= " & f_CnvNumNull(request("KekkaGai"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_CHIKAI_KIMATU_Z		= " & f_CnvNumNull(request("Chikai"&i)) & ", "
@@ -266,8 +291,17 @@ Dim w_DataKbn
 							else
 								w_sSQL = w_sSQL & vbCrLf & " 	T16_SEI_KIMATU_K		= " & f_CnvNumNull(request("Seiseki"&i)) & ", "
 							end if
-							
-							w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_KIMATU_K	= '" & request("Hyoka"&i) & "', "
+							'2022/10/14 UPD 成績入力方法で処理を分岐　-->
+							if w_iSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_KIMATU_K	= '" & request("Hyoka"&i) & "', "
+							else
+								if  w_HyokaArray(i-1) = "@@@" then
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_KIMATU_K		= NULL, "
+								else
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_KIMATU_K		= '" & w_HyokaArray(i-1) & "', "
+								end if
+							end if
+							'2022/10/14 UPD　<--
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_KIMATU_K		= " & f_CnvNumNull(request("Kekka"&i)) & ", "
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_NASI_KIMATU_K	= " & f_CnvNumNull(request("KekkaGai"&i)) & ", "
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_CHIKAI_KIMATU_K		= " & f_CnvNumNull(request("Chikai"&i)) & ", "
@@ -301,8 +335,17 @@ Dim w_DataKbn
 						else
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_SEI_TYUKAN_K		= " & f_CnvNumNull(request("Seiseki"&i)) & ", "
 						end if
-						
-						w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_TYUKAN_K	= '" & request("Hyoka"&i) & "', "
+						'2022/10/14 UPD 成績入力方法で処理を分岐　-->
+						if w_iSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then
+							w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_TYUKAN_K	= '" & request("Hyoka"&i) & "', "
+						else
+							if  w_HyokaArray(i-1) = "@@@" then
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_TYUKAN_K		= NULL, "
+							else
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_TYUKAN_K		= '" & w_HyokaArray(i-1) & "', "
+							end if
+						end if
+						'2022/10/14 UPD <--
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_TYUKAN_K		= " & f_CnvNumNull(request("Kekka"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_NASI_TYUKAN_K	= " & f_CnvNumNull(request("KekkaGai"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_CHIKAI_TYUKAN_K		= " & f_CnvNumNull(request("Chikai"&i)) & ", "
@@ -327,8 +370,17 @@ Dim w_DataKbn
 						else
 							w_sSQL = w_sSQL & vbCrLf & " 	T16_SEI_KIMATU_K		= " & f_CnvNumNull(request("Seiseki"&i)) & ", "
 						end if
-						
-						w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_KIMATU_K	= '" & request("Hyoka"&i) & "', "
+						'2022/10/14 UPD 成績入力方法で処理を分岐　-->
+						if w_iSeisekiInp = C_SEISEKI_INP_TYPE_NUM Then
+							w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKAYOTEI_KIMATU_K	= '" & request("Hyoka"&i) & "', "
+						else
+							if  w_HyokaArray(i-1) = "@@@" then
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_KIMATU_K		= NULL, "
+							else
+								w_sSQL = w_sSQL & vbCrLf & " 	T16_HYOKA_KIMATU_K		= '" & w_HyokaArray(i-1) & "', "
+							end if
+						end if
+						'2022/10/14 UPD <--
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_KIMATU_K		= " & f_CnvNumNull(request("Kekka"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_KEKA_NASI_KIMATU_K	= " & f_CnvNumNull(request("KekkaGai"&i)) & ", "
 						w_sSQL = w_sSQL & vbCrLf & " 	T16_CHIKAI_KIMATU_K		= " & f_CnvNumNull(request("Chikai"&i)) & ", "
@@ -359,12 +411,15 @@ Dim w_DataKbn
             w_sSQL = w_sSQL & vbCrLf & "    AND T16_GAKUSEI_NO = '" & Trim(request("txtGseiNo"&i)) & "'  "
             w_sSQL = w_sSQL & vbCrLf & "    AND T16_KAMOKU_CD = '" & Trim(m_sKamokuCd) & "'  "
 
+			 'response.write  "txtGseiNo:" & Trim(request("txtGseiNo"&i)) & "<BR>"
+            '  response.write w_sSQL & "<BR>"
+			'  response.end
             If gf_ExecuteSQL(w_sSQL) <> 0 Then
                 '//ﾛｰﾙﾊﾞｯｸ
                 msMsg = Err.description
                 Exit Do
             End If
-
+             
 	Next
 
 	 
@@ -490,7 +545,8 @@ Sub showPage()
 	<input type=hidden name=txtClassNo  value="<%=trim(Request("txtClassNo"))%>">
 	<input type=hidden name=txtKamokuCd value="<%=trim(Request("txtKamokuCd"))%>">
 	<input type=hidden name=txtGakkaCd  value="<%=trim(Request("txtGakkaCd"))%>">
-
+	<input type="hidden" name="hidSeisekiInp" value="<%=trim(request("hidSeisekiInp"))%>">
+	<input type="hidden" name="txtZokuseiCd" value="<%=trim(Request("txtZokuseiCd"))%>">
     </form>
     </center>
     </body>
