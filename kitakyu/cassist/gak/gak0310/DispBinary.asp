@@ -6,26 +6,39 @@
 ' ﾌﾟﾛｸﾞﾗﾑID : gak/gak0310/DispBinary.asp
 ' 機      能: 下ページ 学籍データの学生写真Imageデータを表示する
 '-------------------------------------------------------------------------
+' 引      数:教官コード     ＞      SESSIONより（保留）
+'           :処理年度       ＞      SESSIONより（保留）
 ' 変      数:なし
-' 引      渡:txtGakuseiNo           :学生番号
-'            txtMode                :動作モード
+' 引      渡:教官コード     ＞      SESSIONより（保留）
+'           :処理年度       ＞      SESSIONより（保留）
+'           txtGakuseiNo           :学生番号
+'           txtMode                :動作モード
+'                               BLANK   :初期表示
+'                               SEARCH  :結果表示
 ' 説      明:
 '           ■初期表示
-'               なし
+'               タイトルのみ表示
 '           ■結果表示
-'               学生番号より学生写真Imageデータを画像Binaryデータとして送信
+'               学生番号より学生写真Imageデータを画像表示する
 '-------------------------------------------------------------------------
 ' 作      成: 2001/07/02 岩田
 ' 変      更: 2001/07/02
 ' 変      更: 2005/05/06 大前　BLOB型対応
+' 変      更: 2023/07/28 吉田　写真が表示するように修正(gak0300/DispBinary.aspと同様のソースに修正しコメントADDの部分を追加)
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
 <%
 '/////////////////////////// ﾓｼﾞｭｰﾙ変数 /////////////////////////////
-
+    'エラー系
+    Public  m_bErrFlg           'ｴﾗｰﾌﾗｸﾞ
+    
     '取得したデータを持つ変数
+    Public  m_TxtMode      	       ':動作モード
     Public  m_sGakuseiNo           ':学生番号
+    
+    Public	m_Rs					'recordset
+    Public	m_iDsp					'// 一覧表示行数
 
 '///////////////////////////メイン処理/////////////////////////////
 
@@ -37,15 +50,15 @@
 
 Sub Main()
 '********************************************************************************
-'*  [機能]  画像を取得してBINARYとしてResponceする
+'*  [機能]  本ASPのﾒｲﾝﾙｰﾁﾝ
 '*  [引数]  なし
 '*  [戻値]  なし
-'*  [説明]  Global.asaで宣言しているクエリSession("qurs")を使用する
+'*  [説明]  
 '********************************************************************************
 
-    'BLOB型対応の為追加 DB接続もoo4oで行うがgf_AutoOpen内で行っている
-    Dim wOraDyn
-    Dim Chunksize, BytesRead, CurChunkEx
+    Dim w_iRet              '// 戻り値
+    Dim w_sSQL              '// SQL文
+    Dim w_sWinTitle, w_sMsgTitle, w_sMsg, w_sRetURL, w_sTarget
 
     'Message用の変数の初期化
     w_sWinTitle="キャンパスアシスト"
@@ -60,39 +73,78 @@ Sub Main()
     m_bErrFlg = False
 
     Do
-'Response.Write request("gakuNo")
-        '// ﾊﾟﾗﾒｰﾀSET(	'学生番号)
-		m_sGakuseiNo = request("gakuNo")
-        if Trim(m_sGakuseiNo) = "" then exit do
-        Session("OraDatabase").Parameters("IMG_KEY").value = m_sGakuseiNo
-        Session("qurs").Refresh
-        If Err.number <> 0 Then
-            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+        '2023.07.28　ADD Yoshida　-->
+        Response.Expires = 0
+        Response.Buffer = TRUE
+        Response.Clear
+        '2023.07.28　ADD Yoshida　<--
+
+        '// ﾃﾞｰﾀﾍﾞｰｽ接続
+		w_iRet = gf_OpenDatabase()
+        If w_iRet <> 0 Then
+            'ﾃﾞｰﾀﾍﾞｰｽとの接続に失敗
             m_bErrFlg = True
-           Exit Do
+            m_sErrMsg = "データベースとの接続に失敗しました。"
+            Exit Do
         End If
 
-        '// 画像の出力
-       if Not Session("qurs").EOF then
-			 '//// BLOB型対応の為
-			 BytesRead = 0
-			 'Reading in 32K chunks
-			 ChunkSize= 32768
-			 i = 0
-			 Do
-               Response.Expires=0
-               Response.ContentType="image/jpeg"
-			   BytesRead = Session("qurs").Fields("T09_IMAGE").GetChunkByteEx(CurChunkEx, i * ChunkSize, ChunkSize)
-			   if BytesRead > 0 then
-			      Response.BinaryWrite CurChunkEx
-			    end if
-			    i = i + 1
-			 Loop Until BytesRead < ChunkSize
-       End If
+        '// ﾊﾟﾗﾒｰﾀSET
+		m_sGakuseiNo = request("gakuNo")           	'学生番号
+		if Trim(m_sGakuseiNo) = "" then exit do
 
-       Exit Do
+        '2023.07.28　ADD Yoshida　-->
+        Response.ContentType="image/jpeg"
+        '2023.07.28　ADD Yoshida　<--
 
+        'データ抽出SQLを作成する
+        Call s_MakeSQL(w_sSQL)
+
+        'レコードセットの取得
+        Set m_Rs = Server.CreateObject("ADODB.Recordset")
+        w_iRet = gf_GetRecordset(m_Rs, w_sSQL)
+
+        If w_iRet <> 0 Then
+            'ﾚｺｰﾄﾞｾｯﾄの取得失敗
+            m_bErrFlg = True
+            Exit Do     'GOTO LABEL_MAIN_END
+        End If
+
+        '// ページを表示
+        If Not m_Rs.EOF Then
+			Response.BinaryWrite m_Rs("T09_IMAGE")
+		Else
+			Response.Write "Img0000000000.gif"
+        End If
+
+        Exit Do
     Loop
+
+    '// ｴﾗｰの場合はｴﾗｰﾍﾟｰｼﾞを表示（ﾏｽﾀﾒﾝﾃﾒﾆｭｰに戻る）
+    If m_bErrFlg = True Then
+        w_sMsg = gf_GetErrMsg()
+        Call gs_showMsgPage(w_sWinTitle, w_sMsgTitle, w_sMsg, w_sRetURL, w_sTarget)
+    End If
+
+    '// 終了処理
+    If Not IsNull(m_Rs) Then gf_closeObject(m_Rs)
+    Call gs_CloseDatabase()
+
+End Sub
+
+
+Sub s_MakeSQL(p_sSql)
+'********************************************************************************
+'*  [機能]  学籍データ抽出SQL文字列の作成
+'*  [引数]  p_sSql - SQL文字列
+'*  [戻値]  なし 
+'*  [説明]  
+'********************************************************************************
+
+    p_sSql = ""
+    p_sSql = p_sSql & " SELECT "
+    p_sSql = p_sSql & " T09_IMAGE "
+    p_sSql = p_sSql & " FROM T09_GAKU_IMG "
+    p_sSql = p_sSql & " WHERE T09_GAKUSEI_NO = '" & cstr(m_sGakuseiNo) & "'"
 
 End Sub
 

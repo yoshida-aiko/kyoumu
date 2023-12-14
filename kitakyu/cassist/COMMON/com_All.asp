@@ -234,7 +234,10 @@ Public Function AutoOpen(m_oConObj,ByVal p_sDbName, ByVal p_sConnect)
     w_vSplit = Split(p_sConnect, "/")
 
     '/* ADO Ç≈∫»∏ƒ
-    m_oConObj.ConnectionString = "Provider=MSDAORA;"
+    '2023.07.28Å@UPD Yoshida -->
+    'm_oConObj.ConnectionString = "Provider=MSDAORA;"
+    m_oConObj.ConnectionString = "Provider=OraOLEDB.Oracle;"
+    '2023.07.28Å@UPD Yoshida <--
     m_oConObj.ConnectionString = m_oConObj.ConnectionString & "Data Source=" & p_sDbName & ";"
     If Err <> 0 Then
         '√ﬁ∞¿Õﬁ∞ΩÇ∆ÇÃê⁄ë±Ç…é∏îs
