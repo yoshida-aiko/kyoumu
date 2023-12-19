@@ -185,6 +185,12 @@ Dim w_Sisekiarray
 			w_sSQL = ""
 			w_sSQL = w_sSQL & vbCrLf & " UPDATE T16_RISYU_KOJIN SET "
 			' w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = " & C_GOUKAKUTEN  & ","
+            '2023.09.07 Add Kiyomoto 前期終了科目は前期期末成績も更新 -->
+            w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_Z = CASE WHEN T16_KAISETU = " & C_KAI_ZENKI & " THEN 60 "
+            w_sSQL = w_sSQL & vbCrLf & "                           ELSE T16_SEI_KIMATU_Z END,"
+            w_sSQL = w_sSQL & vbCrLf & "   T16_KOUSINBI_KIMATU_Z = CASE WHEN T16_KAISETU = 1 THEN '"& gf_YYYY_MM_DD(date(),"/") & "'"
+            w_sSQL = w_sSQL & vbCrLf & "                           ELSE T16_KOUSINBI_KIMATU_Z END,"
+            '2023.09.07 Add Kiyomoto 前期終了科目は前期期末成績も更新 <--
             w_sSQL = w_sSQL & vbCrLf & "   T16_SEI_KIMATU_K = 60,"
             w_sSQL = w_sSQL & vbCrLf & "   T16_KOUSINBI_KIMATU_K = '" & gf_YYYY_MM_DD(date(),"/") & "',"
             w_sSQL = w_sSQL & vbCrLf & "   T16_UPD_DATE = '" & gf_YYYY_MM_DD(date(),"/") & "', "
