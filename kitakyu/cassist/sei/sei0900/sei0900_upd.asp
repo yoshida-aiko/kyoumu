@@ -14,7 +14,7 @@
 '           ■入力データの登録、更新を行う
 '-------------------------------------------------------------------------
 ' 作      成: 2022/2/1 吉田　再試験成績登録画面を流用し作成
-' 変      更: 
+' 変      更: 2023/01/10 清本 合格更新時に評定と評価不可区分も更新
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -180,6 +180,8 @@ Dim w_Sisekiarray
             w_sSQL = w_sSQL & vbCrLf & "   T17_HYOKA_KIMATU_K = '" &  m_Rs_Hyoka("M08_HYOKA_SYOBUNRUI_MEI")  & "',"
             w_sSQL = w_sSQL & vbCrLf & "   T17_GPA_KIMATU_K = " & m_Rs_Hyoka("M08_HYOTEN_GPA")   & ","
             w_sSQL = w_sSQL & vbCrLf & "   T17_TANI_SUMI = " & m_iHaitotani  & ","
+            w_sSQL = w_sSQL & vbCrLf & "   T17_HYOTEI_KIMATU_K = " & m_Rs_Hyoka("M08_HYOTEI") & ","	'2023.01.10 Add Kiyomoto
+            w_sSQL = w_sSQL & vbCrLf & "   T17_HYOKA_FUKA_KBN = " & C_HYOKA_FUKA_NASI & ","		'2023.01.10 Add Kiyomoto
             w_sSQL = w_sSQL & vbCrLf & "   T17_KOUSINBI_KIMATU_K = '" & gf_YYYY_MM_DD(date(),"/") & "',"
             w_sSQL = w_sSQL & vbCrLf & "   T17_UPD_DATE = '" & gf_YYYY_MM_DD(date(),"/") & "', "
             w_sSQL = w_sSQL & vbCrLf & "   T17_UPD_USER = '"  & Trim(Session("LOGIN_ID")) & "' "

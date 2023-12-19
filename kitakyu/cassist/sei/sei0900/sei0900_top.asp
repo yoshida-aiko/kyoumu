@@ -283,7 +283,8 @@ Function f_GetKamoku_Nenmatu()
 		w_sSQL = w_sSQL & vbCrLf & " 	,M05_CLASS "
 		w_sSQL = w_sSQL & vbCrLf & "	,("
 		w_sSQL = w_sSQL & vbCrLf & " 		SELECT * FROM TT13_GAKU_NEN"
-		w_sSQL = w_sSQL & vbCrLf & " 		WHERE  T13_NENDO = " & cInt(m_iRisyuKakoNendo) - 1
+		'w_sSQL = w_sSQL & vbCrLf & " 		WHERE  T13_NENDO = " & cInt(m_iRisyuKakoNendo) - 1
+		w_sSQL = w_sSQL & vbCrLf & " 		WHERE  T13_NENDO <= " & cInt(m_iNendo) - 1	'2022.03.10 Upd Kiyomoto	'2023.10.24 Upd Kiyomoto 前年度→過年度も対象とする
 		w_sSQL = w_sSQL & vbCrLf & " 		 AND T13_KARI_SINKYU = 1) TT13_GAKU_NEN "
 		w_sSQL = w_sSQL & vbCrLf & " WHERE "
 		w_sSQL = w_sSQL & vbCrLf & " 		T27_NENDO = M05_NENDO "
@@ -304,8 +305,8 @@ Function f_GetKamoku_Nenmatu()
 		w_sSQL = w_sSQL & vbCrLf & " ORDER BY "
 		w_sSQL = w_sSQL & vbCrLf & "  KAMOKU"
 
-' response.write w_sSQL  & "<BR>"
-' rensponse.end
+ 'response.write w_sSQL  & "<BR>"
+ 'rensponse.end
 
         iRet = gf_GetRecordset(m_Rs, w_sSQL)
 		' iRet =gf_GetRecordset_OpenStatic(m_Rs, w_sSQL)

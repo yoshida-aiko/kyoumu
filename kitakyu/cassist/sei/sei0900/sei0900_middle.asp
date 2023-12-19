@@ -541,7 +541,7 @@ End If
 	</SCRIPT>
 	</head>
     <body onload="return window_onload()">
-	<table border="0" cellpadding="0" cellspacing="0" height="245" width="100%">
+	<table border="0" cellpadding="0" cellspacing="0" height="244" width="100%">
 		<tr>
 			<td>
 				<%

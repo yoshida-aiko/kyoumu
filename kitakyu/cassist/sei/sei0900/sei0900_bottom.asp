@@ -283,7 +283,8 @@ Dim w_iNyuNendo
 		w_sSQL = w_sSQL & " 	T17_RISYUKAKO_KOJIN A,T11_GAKUSEKI B, "
 		w_sSQL = w_sSQL & vbCrLf & "	("
 		w_sSQL = w_sSQL & vbCrLf & " 		SELECT * FROM TT13_GAKU_NEN"
-		w_sSQL = w_sSQL & vbCrLf & " 		WHERE  T13_NENDO = " & cInt(m_iRisyuKakoNendo) - 1
+		'w_sSQL = w_sSQL & vbCrLf & " 		WHERE  T13_NENDO = " & cInt(m_iRisyuKakoNendo) - 1
+		w_sSQL = w_sSQL & vbCrLf & " 		WHERE  T13_NENDO <= " & cInt(m_iNendo) - 1	'2022.03.10 Upd Kiyomoto	'2023.10.24 Upd Kiyomoto 前年度→過年度も対象とする
 		w_sSQL = w_sSQL & vbCrLf & " 		 AND T13_KARI_SINKYU = 1) C "
 		w_sSQL = w_sSQL & " WHERE"
 		w_sSQL = w_sSQL & " 	A.T17_NENDO = " & Cint(m_iRisyuKakoNendo) & " "
