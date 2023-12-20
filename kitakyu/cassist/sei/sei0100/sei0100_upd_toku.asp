@@ -9,12 +9,12 @@
 ' 引      数: NENDO          '//処理年
 '             KYOKAN_CD      '//教官CD
 ' 変      数:
-' 引      渡:
+' 引      渡:ｴﾗｰﾌﾗｸﾞ
 ' 説      明:
 '           ■入力データの登録、更新を行う
 '-------------------------------------------------------------------------
 ' 作      成: 2001/07/27 前田 智史
-' 変      更: 
+' 変      更: 2023/12/14 吉田          WEBアクセスログカスタマイズ 
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -280,6 +280,8 @@ Sub showPage()
 
 	    document.frm.target = "main";
 	    document.frm.action = "./sei0100_bottom.asp"
+        document.frm.LOG_SOSA.value = "登録";		//add 2023/12/14 吉田
+		document.frm.LOG_TAISYO.value = document.frm.LOG_TAISYO.value;		//add 2023/12/14 吉田
 	    document.frm.submit();
 	    return;
 
@@ -297,6 +299,10 @@ Sub showPage()
 	<input type=hidden name=txtClassNo  value="<%=trim(Request("txtClassNo"))%>">
 	<input type=hidden name=txtKamokuCd value="<%=trim(Request("txtKamokuCd"))%>">
 	<input type=hidden name=txtGakkaCd  value="<%=trim(Request("txtGakkaCd"))%>">
+    <!-- ADD START 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="<%=request("LOG_TAISYO")%>">
+	<input type="hidden" name="LOG_SOSA" value="<%=request("LOG_SOSA")%>">
+	<!-- ADD END 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
 
     </form>
     </center>

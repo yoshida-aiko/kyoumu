@@ -15,6 +15,7 @@
 '-------------------------------------------------------------------------
 ' 作      成: 2001/09/07 モチナガ
 ' 変      更: 2016/05/18 Nishimura 異動(休学者)の場合更新できない障害対応
+' 変      更: 2023/12/15 吉田          WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -188,6 +189,8 @@ Sub showPage()
 
 	    document.frm.target = "main";
 	    document.frm.action = "sei0500_bottom.asp"
+        document.frm.LOG_SOSA.value = "登録";		//add 2023/12/15 吉田
+		document.frm.LOG_TAISYO.value = document.frm.LOG_TAISYO.value;		//add 2023/12/15 吉田
 	    document.frm.submit();
 
     }
@@ -203,7 +206,10 @@ Sub showPage()
 	<input type=hidden name=txtGakuNo   value="<%=trim(Request("txtGakuNo"))%>">
 	<input type=hidden name=txtClassNo  value="<%=trim(Request("txtClassNo"))%>">
 	<input type=hidden name=txtKamokuCd value="<%=trim(Request("txtKamokuCd"))%>">
-
+    <!-- ADD START 2023/12/15 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="<%=request("LOG_TAISYO")%>">
+	<input type="hidden" name="LOG_SOSA" value="<%=request("LOG_SOSA")%>">
+	<!-- ADD END 2023/12/15 吉田 WEBアクセスログカスタマイズ -->
 	</form>
     </body>
     </html>

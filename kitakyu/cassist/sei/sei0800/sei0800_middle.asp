@@ -229,6 +229,7 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_SIKEN_CD='0'"
 		w_sSQL = w_sSQL & vbCrLf & "  AND T24_SIKEN_NITTEI.T24_GAKUNEN=" & Cint(m_sGakuNo)
 		
+		'response.write w_sSQL & "<br>"
 		w_iRet = gf_GetRecordset(m_DRs, w_sSQL)
 		If w_iRet <> 0 Then
 			'Úº°ÄÞ¾¯Ä‚ÌŽæ“¾Ž¸”s

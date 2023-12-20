@@ -18,7 +18,7 @@
 '               下のフレームに指定した条件にかなう調査書の内容を表示させる
 '-------------------------------------------------------------------------
 ' 作      成: 2021/12/23 吉田　成績登録画面を流用し作成
-' 変      更: 
+' 変      更: 2023/12/19 吉田  WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -97,7 +97,11 @@ Sub Main()
 	        w_iRet = f_GetRyuDaigae(m_iSikenKbn)
 	        If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
 
-       '// ページを表示
+		'//試験区分名を取得　2023/12/19 add
+		 w_iRet =  f_GetSiken()
+		 If w_iRet <> 0 Then m_bErrFlg = True : Exit Do
+
+       f_SetData
        Call showPage()
        Exit Do
     Loop
@@ -130,7 +134,7 @@ Sub s_SetParam()
 End Sub
 
 '********************************************************************************
-'*  [機能]  試験コンボを取得
+'*  [機能]  試験名を取得
 '*  [引数]  なし
 '*  [戻値]  なし
 '*  [説明]  
@@ -154,10 +158,11 @@ Function f_GetSiken()
 		w_sSQL = w_sSQL & vbCrLf & "  M01_KUBUN"
 		w_sSQL = w_sSQL & vbCrLf & "  WHERE M01_NENDO = " & m_iNendo
 		w_sSQL = w_sSQL & vbCrLf & "    AND M01_DAIBUNRUI_CD = " & cint(C_SIKEN)
-		w_sSQL = w_sSQL & vbCrLf & "    AND M01_SYOBUNRUI_CD < " & cint(C_SIKEN_JITURYOKU)
-		w_sSQL = w_sSQL & vbCrLf & "  ORDER BY M01_SYOBUNRUI_CD"
+		' w_sSQL = w_sSQL & vbCrLf & "    AND M01_SYOBUNRUI_CD < " & cint(C_SIKEN_JITURYOKU) '2023/12/19 DEL
+		w_sSQL = w_sSQL & vbCrLf & "    AND M01_SYOBUNRUI_CD = " & cint(C_SIKEN_SAISI) '2023/12/19 Ins
+		' w_sSQL = w_sSQL & vbCrLf & "  ORDER BY M01_SYOBUNRUI_CD"	 '2023/12/19 DEL
 
-response.write "w_sSQL:" & w_sSQL & "<BR>"
+' response.write "w_sSQL:" & w_sSQL & "<BR>"
         iRet = gf_GetRecordset(m_Rs_Siken, w_sSQL)
         If iRet <> 0 Then
             'ﾚｺｰﾄﾞｾｯﾄの取得失敗
@@ -871,6 +876,16 @@ Sub showPage()
         document.frm.SYUBETU.value=vl[5];
         document.frm.txtKamokuNM.value=vl[6];
 
+		//add start 2023/12/19 吉田
+    	//試験区分
+		var taisyo = document.frm.txtShikenMei.value;
+		//学年/クラス名/科目名
+		taisyo = taisyo + "/" + document.frm.cboKamoku.options[document.frm.cboKamoku.selectedIndex].text.split('　').join('/').replace(/\/\s*$/, "");
+		
+		document.frm.LOG_TAISYO.value = taisyo;
+		document.frm.LOG_SOSA.value = "表示";
+		//add end 2023/12/19 吉田
+		
         return 0;
 	}
 
@@ -899,12 +914,19 @@ Sub showPage()
 	
 	<center>
 	<form name="frm" METHOD="post">
+	<!-- ADD START 2023/12/19 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="">
+	<input type="hidden" name="LOG_SOSA" value="">
+	<!-- ADD END 2023/12/19 吉田 WEBアクセスログカスタマイズ -->
 
 	<% 
 		Dim w_iGakunen_s
 		Dim w_sGakkaCd_s
 		Dim w_sKamokuCd_s
 		Dim w_sKamokuNM_s
+		Dim w_sShikenMei		 '2023/12/19 INS
+
+		w_sShikenMei =  m_Rs_Siken("M01_SYOBUNRUIMEI") '2023/12/19 INS
 
 		call gs_title(" 再試験成績登録 "," 登　録 ") %>
 <br>
@@ -1035,7 +1057,7 @@ Sub showPage()
 	<input type="hidden" name="txtUpdDate" value="<%=gf_GetT16UpdDate(m_iNendo,w_iGakunen_s,w_sGakkaCd_s,w_sKamokuCd_s,"")%>">
 	<!--ADD ED --> 
 	<input type="hidden" name="SYUBETU" value="">
-	
+	<input type="hidden" name="txtShikenMei" value="<%=w_sShikenMei%>"> <!--2023.12.19 ADD -->
 	</form>
 	</center>
 	</body>

@@ -25,6 +25,7 @@
 ' 変      更: 2018/03/22 西村		開設時期項目追加(非表示)  '2019/12/06 kiyomto ソースからこの対応箇所が漏れており追加
 ' 修　    正: 2019/03/06 藤林		成績登録時に、必修か選択科目のうち選択している学生のみを取得する様に修正
 ' 変     更: 2020/03/09 清本		成績登録時に、開設時期を個人履修データから判断する
+' 変      更: 2023/12/14 吉田		WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -71,6 +72,10 @@
 	
 	Public m_sSyubetu
 	Dim m_SchoolFlg
+
+	Public  m_sTaisyo				'対象		'add 2023/12/14 吉田
+	Public  m_sSosa					'操作		'add 2023/12/14 吉田
+	Public  m_sUserId				'ログインID	'add 2023/12/14 吉田
 	
 '///////////////////////////メイン処理/////////////////////////////
 
@@ -204,6 +209,14 @@ Sub Main()
 			
 	    End If
 		
+		'add start 2023/12/14 吉田
+		'操作LOG出力
+		If gf_InsertOpeLog(m_iNendo,"SEI0100","成績登録",m_sTaisyo,m_sSosa,m_sUserId) <> 0 Then
+			m_bErrFlg = True
+			Exit Do
+		End If
+		'add end 2023/12/14 吉田
+
 	   '// ページを表示
 	   Call showPage()
 	   Exit Do
@@ -240,6 +253,12 @@ Sub s_SetParam()
 	m_sSyubetu	= trim(Request("SYUBETU"))
 	m_sZokuseiCd	= request("txtZokuseiCd")	'Ins 2022/10/7 Yoshida
 	m_FirstSeisekiInp	= request("hidSeisekiInp")	'Ins 2022/10/14 Yoshida
+
+	'add start 2023/12/14 吉田
+	m_sTaisyo = request("LOG_TAISYO")
+	m_sSosa = request("LOG_SOSA")
+	m_sUserId = Session("LOGIN_ID")
+	'add end 　2023/12/14 吉田
 	
 End Sub
 
@@ -1386,6 +1405,8 @@ Sub showPage()
 			document.frm.action="sei0100_upd_toku.asp";
 		<% End if %>
 	        document.frm.target="main";
+			document.frm.LOG_SOSA.value = "登録";		//add 2023/12/14 吉田
+			document.frm.LOG_TAISYO.value = document.frm.LOG_TAISYO.value;		//add 2023/12/14 吉田
 	        document.frm.submit();
 		}
 	}
@@ -2266,6 +2287,11 @@ if (w_KekkaGai){		//2001/12/17 Add
 	<input type="hidden" name="hidHyoka" value="">
 	<input type="hidden" name="hidSeisekiInp" value="<%=m_FirstSeisekiInp%>">
 	<input type="hidden" name="txtZokuseiCd" value="<%=m_sZokuseiCd%>">
+
+	<!-- ADD START 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="<%=m_sTaisyo%>">
+ 	<input type="hidden" name="LOG_SOSA" value="<%=m_sSosa%>">
+  	<!-- ADD END 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
 	</FORM>
 	</center>
 	</body>

@@ -30,6 +30,7 @@
                                 
     Public  m_Kaisi 			'成績入力期間（はじめ）
     Public  m_Syuryo			'成績入力期間（おわり）
+	Public	m_lKikan			'0：成績入力期間内、1：成績入力期間外　　'2023/12/15　Yoshida　Ins
     Public  m_Kamokumei			'科目名
 
 '///////////////////////////メイン処理/////////////////////////////
@@ -62,6 +63,7 @@ Sub Main()
     Err.Clear
 
     m_bErrFlg = False
+	m_lKikan = 0			'2023/12/15　Yoshida Ins
 
 	Do
         '// ﾃﾞｰﾀﾍﾞｰｽ接続
@@ -81,9 +83,14 @@ Sub Main()
 
 		'//期間データの取得
         w_iRet = f_Nyuryokudate()
-		If w_iRet <> 0 Then 
-			Exit Do
+		' 2023/12/15 Yoshida UPD-->
+		' If w_iRet <> 0 Then 
+		' 	Exit Do
+		' End If
+		If w_iRet = 1 Then
+			m_lKikan = 1
 		End If
+		' 2023/12/15 Yoshida UPD<--
 
 		'//科目名を取得
 		w_iRet = f_GetKamokumei()
@@ -131,6 +138,8 @@ Function f_Nyuryokudate()
 '*	[説明]	
 '********************************************************************************
 
+	Dim w_sSysDate		'2023/12/15　Yoshida Ins
+
 	On Error Resume Next
 	Err.Clear
 	f_Nyuryokudate = 1
@@ -156,6 +165,7 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  SELECT "
 		w_sSQL = w_sSQL & vbCrLf & "  	M27.M27_SEISEKI_KAISI, "
 		w_sSQL = w_sSQL & vbCrLf & "  	M27.M27_SEISEKI_SYURYO "
+		w_sSQL = w_sSQL & vbCrLf & "  	,SYSDATE "				'2023/12/15 Yoshida Ins
 		w_sSQL = w_sSQL & vbCrLf & "  FROM  "
 		w_sSQL = w_sSQL & vbCrLf & "  	M27_SIKEN M27 "
 		w_sSQL = w_sSQL & vbCrLf & "  WHERE  "
@@ -179,16 +189,26 @@ Function f_Nyuryokudate()
 			Exit Do 
 		End If
 
+		m_Kaisi="          "	'2023/12/15　Yoshida Ins
+		m_Syuryo="          "	'2023/12/15　Yoshida Ins
 		If Not w_Rs.EOF Then
 '			m_Kaisi  = w_Rs("M28_SEISEKI_KAISI")
 '			m_Syuryo = w_Rs("M28_SEISEKI_SYURYO")
 			m_Kaisi  = w_Rs("M27_SEISEKI_KAISI")
 			m_Syuryo = w_Rs("M27_SEISEKI_SYURYO")
+			w_sSysDate = Left(gf_SetNull2String(w_Rs("SYSDATE")),10)		'システム日付	'2023/12/15　Yoshida Ins
 		End If
+
+		'2023/12/15　Yoshida Ins-->
+		'入力期間内なら正常
+		If gf_YYYY_MM_DD(m_Kaisi,"/") <= gf_YYYY_MM_DD(w_sSysDate,"/") And gf_YYYY_MM_DD(m_Syuryo,"/") >= gf_YYYY_MM_DD(w_sSysDate,"/") Then
+			f_Nyuryokudate = 0
+		End If
+		'2023/12/15　Yoshida Ins-->
 
 	    Call gf_closeObject(w_Rs)
 
-		f_Nyuryokudate = 0
+		'f_Nyuryokudate = 0			'2023/12/15　Yoshida DEL
 		Exit Do
 	Loop
 
@@ -402,7 +422,12 @@ Sub showPage()
 	<table width=50%>
 		<tr>
 			<td align=center nowrap>
-				<input type=button class=button value="　登　録　" onclick="javascript:f_Touroku()">　
+				<%' 2023.12.15  yoshida　UPD ST　
+					'成績期間のみ登録ボタンを表示するように修正	--%>
+				<%If m_lKikan = 0 Then%>
+					<input type=button class=button value="　登　録　" onclick="javascript:f_Touroku()">　
+				<%End If%>
+				<%' 2023.12.15  yoshida　UPD ED　--%>
 				<input type=button class=button value="キャンセル" onclick="javascript:f_Cansel()"></td>
 		</tr>
 	</table>

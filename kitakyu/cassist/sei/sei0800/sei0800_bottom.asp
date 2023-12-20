@@ -18,7 +18,7 @@
 '				下のフレームに指定した条件にかなう調査書の内容を表示させる
 '-------------------------------------------------------------------------
 ' 作      成: 2021/12/23 吉田　成績登録画面を流用し作成
-' 変      更: 
+' 変      更: 2023/12/19 吉田  WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -65,6 +65,10 @@
 	Dim m_SchoolFlg
 
 	Public Const C_GOUKAKUTEN = 60  '合格点
+
+	Public  m_sTaisyo				'対象		'add 2023/12/19 吉田
+	Public  m_sSosa					'操作		'add 2023/12/19 吉田
+	Public  m_sUserId				'ログインID	'add 2023/12/19 吉田
 	
 '///////////////////////////メイン処理/////////////////////////////
 
@@ -158,7 +162,15 @@ Sub Main()
 			Call ShowPage_No()
 			Exit Do
 		End If
-				
+		
+		'add start 2023/12/19 吉田
+		'操作LOG出力
+		If gf_InsertOpeLog(m_iNendo,"SEI0800","再試験成績登録",m_sTaisyo,m_sSosa,m_sUserId) <> 0 Then
+			m_bErrFlg = True
+			Exit Do
+		End If
+		'add end 2023/12/19 吉田
+
 	   '// ページを表示
 	   Call showPage()
 	   Exit Do
@@ -194,6 +206,12 @@ Sub s_SetParam()
 	m_iJigenTani = Session("JIKAN_TANI") '１時限の単位数
 	m_sSyubetu	= trim(Request("SYUBETU"))
 	
+	'add start 2023/12/19 吉田
+	m_sTaisyo = request("LOG_TAISYO")
+	m_sSosa = request("LOG_SOSA")
+	m_sUserId = Session("LOGIN_ID")
+	'add end 　2023/12/19 吉田
+
 End Sub
 
 
@@ -980,6 +998,8 @@ Sub showPage()
 		document.frm.hidUpdMode.value = "TUJO";
 		document.frm.action="sei0800_upd.asp";
 		document.frm.target="main";
+		document.frm.LOG_SOSA.value = "登録";		//add 2023/12/19 吉田
+		document.frm.LOG_TAISYO.value = document.frm.LOG_TAISYO.value;		//add 2023/12/19 吉田
 		document.frm.submit();
 	
 	}
@@ -1417,6 +1437,11 @@ Sub showPage()
 	<input type="hidden" name="hidSchoolFlg" value ="<%=m_SchoolFlg%>">
 	<input type="hidden" name="hidSeiseki" value="">
 
+	<!-- ADD START 2023/12/19 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="<%=m_sTaisyo%>">
+ 	<input type="hidden" name="LOG_SOSA" value="<%=m_sSosa%>">
+  	<!-- ADD END 2023/12/19 吉田 WEBアクセスログカスタマイズ -->
+	
 	</FORM>
 	</center>
 	</body>

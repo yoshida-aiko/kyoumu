@@ -16,6 +16,7 @@
 '-------------------------------------------------------------------------
 ' 作      成: 2001/09/06 モチナガ
 ' 変      更: 2016/05/18 Nishimura 異動(休学者)の場合更新できない障害対応
+' 変      更: 2023/12/15 吉田		WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -38,6 +39,10 @@
 
 	Public	m_iMax			'最大ページ
 	Public  m_Half			'最大ページの半分
+
+	Public  m_sTaisyo				'対象		'add 2023/12/15 吉田
+	Public  m_sSosa					'操作		'add 2023/12/15 吉田
+	Public  m_sUserId				'ログインID	'add 2023/12/15 吉田
 '///////////////////////////メイン処理/////////////////////////////
 
     'ﾒｲﾝﾙｰﾁﾝ実行
@@ -112,6 +117,14 @@ Sub Main()
 			Exit Do
 		End If
 
+		'add start 2023/12/15 吉田
+		'操作LOG出力
+		If gf_InsertOpeLog(m_iNendo,"SEI0500","実力試験成績登録",m_sTaisyo,m_sSosa,m_sUserId) <> 0 Then
+			m_bErrFlg = True
+			Exit Do
+		End If
+		'add end 2023/12/15 吉田
+
 	   '// ページを表示
 	   Call showPage()
 	   Exit Do
@@ -145,6 +158,11 @@ Sub s_SetParam()
 	m_sClassNo	= Cint(request("txtClassNo"))
 	m_sKamokuCd	= request("txtKamokuCd")
 
+	'add start 2023/12/15 吉田
+	m_sTaisyo = request("LOG_TAISYO")
+	m_sSosa = request("LOG_SOSA")
+	m_sUserId = Session("LOGIN_ID")
+	'add end 　2023/12/15 吉田
 End Sub
 
 Function f_GetClassData()
@@ -209,6 +227,8 @@ Function f_Nyuryokudate()
 '*	[説明]	
 '********************************************************************************
 
+	Dim w_sSysDate		'2023/12/15　Yoshida Ins
+
 	On Error Resume Next
 	Err.Clear
 	f_Nyuryokudate = 1
@@ -219,6 +239,7 @@ Function f_Nyuryokudate()
 		w_sSQL = w_sSQL & vbCrLf & "  SELECT "
 		w_sSQL = w_sSQL & vbCrLf & "  	M27.M27_SEISEKI_KAISI, "
 		w_sSQL = w_sSQL & vbCrLf & "  	M27.M27_SEISEKI_SYURYO "
+		w_sSQL = w_sSQL & vbCrLf & "  	,SYSDATE "				'2023/12/15 Yoshida Ins
 		w_sSQL = w_sSQL & vbCrLf & "  FROM  "
 		w_sSQL = w_sSQL & vbCrLf & "  	M27_SIKEN M27 "
 		w_sSQL = w_sSQL & vbCrLf & "  WHERE  "
@@ -239,11 +260,24 @@ Function f_Nyuryokudate()
 
 		If m_DRs.EOF Then
 			Exit Do
+		else
+			' 2023/12/15　Yoshida Ins-->
+			m_Kaisi = gf_SetNull2String(m_DRs("M27_SEISEKI_KAISI"))		'成績入力開始日
+			m_Syuryo = gf_SetNull2String(m_DRs("M27_SEISEKI_SYURYO"))		'成績入力終了日
+			w_sSysDate = gf_SetNull2String(m_DRs("SYSDATE"))				'システム日付
+			' 2023/12/15　Yoshida Ins<--
 		End If
+
+		'2023/12/15　Yoshida Ins-->
+		'入力期間内なら正常
+		If gf_YYYY_MM_DD(m_Kaisi,"/") <= gf_YYYY_MM_DD(w_sSysDate,"/") And gf_YYYY_MM_DD(m_Syuryo,"/") >= gf_YYYY_MM_DD(w_sSysDate,"/") Then
+			f_Nyuryokudate = 0
+		End If
+		'2023/12/15　Yoshida Ins-->
 
 	    Call gf_closeObject(m_DRs)
 
-		f_Nyuryokudate = 0
+		' f_Nyuryokudate = 0		'2023/12/15　Yoshida DEL
 		Exit Do
 	Loop
 
@@ -329,6 +363,8 @@ Sub showPage()
 			//登録処理
 	        document.frm.action = "sei0500_upd.asp?<%=Request.Form.Item%>";
 	        document.frm.target = "main";
+			document.frm.LOG_SOSA.value = "登録";		//add 2023/12/15 吉田
+			document.frm.LOG_TAISYO.value = document.frm.LOG_TAISYO.value;		//add 2023/12/15 吉田
 	        document.frm.submit();
 
 	    }
@@ -483,7 +519,11 @@ Sub showPage()
 	<table width="50%">
 		<tr>
 			<td align="center" nowrap>
-				<input type="button" class="button" value="　登　録　" onclick="javascript:f_Touroku()">　
+			<%' 2023.12.15  yoshida　UPD ST　--%>
+				<%If m_lKikan = 0 Then%>
+					<input type="button" class="button" value="　登　録　" onclick="javascript:f_Touroku()">　
+				<%End If%>
+			<%' 2023.12.15  yoshida　UPD ED　--%>
 				<input type="button" class="button" value="キャンセル" onclick="javascript:f_Cansel()">
 			</td>
 		</tr>
@@ -493,6 +533,11 @@ Sub showPage()
 	<input type="hidden" name="i_Max"       value="<%=i%>">
 	<input type="hidden" name="PasteType" value="">
 	<input type="hidden" name="i_Maxherf" value="<%=m_Half%>">
+	
+	<!-- ADD START 2023/12/15 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="<%=m_sTaisyo%>">
+ 	<input type="hidden" name="LOG_SOSA" value="<%=m_sSosa%>">
+  	<!-- ADD END 2023/12/15 吉田 WEBアクセスログカスタマイズ -->
 	</FORM>
 	</center>
 	</body>

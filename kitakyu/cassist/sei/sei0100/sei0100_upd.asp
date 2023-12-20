@@ -15,6 +15,7 @@
 '-------------------------------------------------------------------------
 ' 作      成: 2001/07/27 前田 智史
 ' 変      更: 2018/03/22 西村 開設時期を前画面から取得し前期開設の場合は後期期末にも成績を更新する
+' 変      更: 2023/12/14 吉田          WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -528,6 +529,8 @@ Sub showPage()
 
 	    document.frm.target = "main";
 	    document.frm.action = "./sei0100_bottom.asp"
+		document.frm.LOG_SOSA.value = "登録";		//add 2023/12/14 吉田
+		document.frm.LOG_TAISYO.value = document.frm.LOG_TAISYO.value;		//add 2023/12/14 吉田
 	    document.frm.submit();
 	    return;
 
@@ -547,6 +550,10 @@ Sub showPage()
 	<input type=hidden name=txtGakkaCd  value="<%=trim(Request("txtGakkaCd"))%>">
 	<input type="hidden" name="hidSeisekiInp" value="<%=trim(request("hidSeisekiInp"))%>">
 	<input type="hidden" name="txtZokuseiCd" value="<%=trim(Request("txtZokuseiCd"))%>">
+	<!-- ADD START 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="<%=request("LOG_TAISYO")%>">
+	<input type="hidden" name="LOG_SOSA" value="<%=request("LOG_SOSA")%>">
+	<!-- ADD END 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
     </form>
     </center>
     </body>

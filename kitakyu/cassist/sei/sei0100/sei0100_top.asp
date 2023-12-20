@@ -27,6 +27,7 @@
 ' 変      更: 2019/02/12 清本          後期期末試験時もクラス学科以外の学科(旧学科)はクラス学科のコースでコースを限定しない
 ' 変      更: 2023/02/10 清本          後期期末試験時も評価形式文字入力対応を行う
 ' 変      更: 2023/02/15 清本          留学生代替え科目時も評価形式文字入力対応を行う
+' 変      更: 2023/12/14 吉田          WEBアクセスログカスタマイズ
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -1293,6 +1294,16 @@ Sub showPage()
         document.frm.txtKamokuNM.value=vl[6];
         document.frm.txtZokuseiCd.value=vl[7]; //2022/09/30 INS
 
+		//add start 2023/12/14 吉田
+    	//試験区分
+		var taisyo = document.frm.txtSikenKBN.options[document.frm.txtSikenKBN.selectedIndex].text;
+		//学年/クラス名/科目名
+		taisyo = taisyo + "/" + document.frm.cboKamoku.options[document.frm.cboKamoku.selectedIndex].text.split('　').join('/').replace(/\/\s*$/, "");
+		
+		document.frm.LOG_TAISYO.value = taisyo;
+		document.frm.LOG_SOSA.value = "表示";
+		//add end 2023/12/14 吉田
+
         return 0;
 	}
 
@@ -1321,6 +1332,10 @@ Sub showPage()
 	
 	<center>
 	<form name="frm" METHOD="post">
+	<!-- ADD START 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
+	<input type="hidden" name="LOG_TAISYO" value="">
+	<input type="hidden" name="LOG_SOSA" value="">
+	<!-- ADD END 2023/12/14 吉田 WEBアクセスログカスタマイズ -->
 
 	<% 
 		Dim w_iGakunen_s
