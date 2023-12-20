@@ -310,6 +310,7 @@ Public Const C_SIKEN_KOU_KIM = 4    '後期期末試験
 Public Const C_SIKEN_JITURYOKU = 5  '実力試験
 Public Const C_SIKEN_TUISI = 6      '追試験
 Public Const C_SIKEN_SAISI = 7      '再試験　'2021.12.23 再試験機能追加　Ins
+Public Const C_SIKEN_KARISINKYU = 8 '仮進級者追認試験 '2022.02.18 仮進級機能追加　Ins
 
 '学期区分(C_GAKKI=14)
 Public Const C_GAKKI_ZENKI = 1  '前期
