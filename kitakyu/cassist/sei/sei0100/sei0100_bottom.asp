@@ -24,8 +24,9 @@
 ' 変      更: 2017/12/26 西村		科目名引き継ぎを追加
 ' 変      更: 2018/03/22 西村		開設時期項目追加(非表示)  '2019/12/06 kiyomto ソースからこの対応箇所が漏れており追加
 ' 修　    正: 2019/03/06 藤林		成績登録時に、必修か選択科目のうち選択している学生のみを取得する様に修正
-' 変     更: 2020/03/09 清本		成績登録時に、開設時期を個人履修データから判断する
+' 変      更: 2020/03/09 清本		成績登録時に、開設時期を個人履修データから判断する
 ' 変      更: 2023/12/14 吉田		WEBアクセスログカスタマイズ
+' 変      更: 2024/06/19 清本		清掃とSHRは遅刻回数の入力不可としてハイフン表示にする
 '*************************************************************************/
 %>
 <!--#include file="../../Common/com_All.asp"-->
@@ -77,6 +78,9 @@
 	Public  m_sSosa					'操作		'add 2023/12/14 吉田
 	Public  m_sUserId				'ログインID	'add 2023/12/14 吉田
 	
+    Private Const C_TOKU_SEISO = "0002" '特別活動 清掃 科目コード   '2024.06.19 Add Kiyomoto
+    Private Const C_TOKU_SHR = "0003"   '特別活動 SHR 科目コード    '2024.06.19 Add Kiyomoto
+
 '///////////////////////////メイン処理/////////////////////////////
 
     'ﾒｲﾝﾙｰﾁﾝ実行
@@ -2064,12 +2068,12 @@ if (w_KekkaGai){		//2001/12/17 Add
 						w_sInputClass3 = "" '2022.03.16INS
 					End If
 					
-					if m_iKikan = "NO" Then
+					if m_iKikan = "NO" or (m_sSikenKBN = C_SIKEN_KOU_KIM and w_bZenkiOnly = true) Then '2023.12.21 Yoshida　ADD 前期開設科目の場合の処理を追加
 						w_sInputClass1 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'"
 					End if
 					
 					'// 欠課入力可能ﾌﾗｸﾞ
-					if Not m_bKekkaNyuryokuFlg then
+					if Not m_bKekkaNyuryokuFlg or (m_sSikenKBN = C_SIKEN_KOU_KIM and w_bZenkiOnly = true) Then '2023.12.21 Yoshida　ADD 前期開設科目の場合の処理を追加
 						w_sInputClass2 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'"
 					End if
 					w_sInputClass3 = "class='" & w_cell & "' style='text-align:right;' readonly tabindex='-1'" '2022.03.16INS
@@ -2142,7 +2146,11 @@ if (w_KekkaGai){		//2001/12/17 Add
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
 							<!--<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>	<%'-- 2022.03.04 再履修対応 Ins-- %>　2022.06.22 Del 特別活動の場合前年成績不要-->
 							<td class="<%=w_cell%>" width="50"  nowrap align="center" <%=w_Padding%>>-</td>
-							<td class="<%=w_cell%>" width="100" nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
+							<%If m_sKamokuCd = C_TOKU_SEISO Or m_sKamokuCd = C_TOKU_SHR Then    '清掃とSHRは遅刻をハイフン表示 2024.06.19 Add Kiyomoto%>
+								<td class="<%=w_cell%>" width="100"  nowrap align="center" <%=w_Padding%>>-</td>
+							<%Else%>
+								<td class="<%=w_cell%>" width="100" nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
+							<%End If%>
 							<td class="<%=w_cell%>" width="80"  nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
 							<td class="<%=w_cell%>" width="85"  nowrap align="center" <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 					<%End If%>
@@ -2199,7 +2207,11 @@ if (w_KekkaGai){		//2001/12/17 Add
 					<%Else%>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
 						<td class="<%=w_cell%>" width="50"  align="center" nowrap  <%=w_Padding%>>-</td>
-						<td class="<%=w_cell%>" width="100" align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
+						<%If m_sKamokuCd = C_TOKU_SEISO Or m_sKamokuCd = C_TOKU_SHR Then    '清掃とSHRは遅刻をハイフン表示 2024.06.19 Add Kiyomoto%>
+							<td class="<%=w_cell%>" width="100"  nowrap align="center" <%=w_Padding%>>-</td>
+						<%Else%>
+							<td class="<%=w_cell%>" width="100" align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Chikai<%=i%> value="<%=w_sChikai%>" size=2 maxlength=2 onKeyDown="f_MoveCur('Chikai',this.form,<%=i%>)"></td>
+						<%End If%>
 						<td class="<%=w_cell%>" width="80"  align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=Kekka<%=i%> value="<%=w_sKekka%>" size=2 maxlength=3 onKeyDown="f_MoveCur('Kekka',this.form,<%=i%>)"></td>
 						<td class="<%=w_cell%>" width="85"  align="center" nowrap  <%=w_Padding%>><input type="text" <%=w_sInputClass2%>  name=KekkaGai<%=i%> value="<%=w_sKekkaGai%>" size=2 maxlength=3 onKeyDown="f_MoveCur('KekkaGai',this.form,<%=i%>)"></td>
 					<%End If%>
